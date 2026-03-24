@@ -1,4 +1,29 @@
 
+# GKE Service Account
+resource "google_service_account" "gke_nodes" {
+  account_id   = "gke-nodes-${var.suffix}"
+  display_name = "GKE Nodes Service Account"
+  project      = var.project_id
+}
+
+resource "google_project_iam_member" "gke_nodes_logging" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.gke_nodes.email}"
+}
+
+resource "google_project_iam_member" "gke_nodes_monitoring" {
+  project = var.project_id
+  role    = "roles/monitoring.metricWriter"
+  member  = "serviceAccount:${google_service_account.gke_nodes.email}"
+}
+
+resource "google_project_iam_member" "gke_nodes_stackdriver" {
+  project = var.project_id
+  role    = "roles/stackdriver.resourceMetadata.writer"
+  member  = "serviceAccount:${google_service_account.gke_nodes.email}"
+}
+
 # GKE Cluster
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
@@ -10,11 +35,15 @@ resource "google_container_cluster" "primary" {
   # Remove default node pool
   remove_default_node_pool = true
   initial_node_count       = 1
+  deletion_protection      = false
 
   # Workload Identity
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
+
+  # Enable L4 ILB Subsetting
+  enable_l4_ilb_subsetting = true
 
   # Network configuration
   network    = var.network_name
@@ -76,7 +105,7 @@ resource "google_container_cluster" "primary" {
 
 # Node pool
 resource "google_container_node_pool" "primary_nodes" {
-  name       = "${var.cluster_name}-node-pool"
+  name       = "np-${var.suffix}"
   location   = var.region
   cluster    = google_container_cluster.primary.name
   node_count = var.node_count_per_zone
@@ -85,6 +114,9 @@ resource "google_container_node_pool" "primary_nodes" {
     machine_type = var.machine_type
     disk_size_gb = var.disk_size_gb
     disk_type    = var.disk_type
+
+    # Use the dedicated service account
+    service_account = google_service_account.gke_nodes.email
 
     # Workload Identity
     workload_metadata_config {

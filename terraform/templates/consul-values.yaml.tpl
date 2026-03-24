@@ -16,10 +16,6 @@ global:
   acls:
     manageSystemACLs: ${enable_acls}
 
-  # Enable Prometheus metrics
-  metrics:
-    enabled: ${enable_metrics}
-
 # --- Server Configuration ---
 server:
   enabled: true
@@ -57,10 +53,18 @@ server:
 # Clients must be disabled on GKE Autopilot as they use hostPorts/privileged mode
 client:
   enabled: %{ if enable_gke_autopilot }false%{ else }true%{ endif }
+  grpc: true
 
 # --- Connect Inject (Service Mesh) ---
 connectInject:
   enabled: true
+  transparentProxy:
+    defaultEnabled: true
+  consulNamespaces:
+    mirroringK8S: true
+  apiGateway:
+    manageExternalCRDs: false
+    manageNonStandardCRDs: false
 
   # Set to false to use annotations per-deployment
   default: false
@@ -72,16 +76,16 @@ connectInject:
     cniBinDir: "/home/kubernetes/bin"
     cniNetDir: "/etc/cni/net.d"
 
-  # Consul API Gateway configuration
-  # GKE already manages standard Gateway API CRDs, so we must disable management here
-  apiGateway:
-    manageExternalCRDs: false
-    manageNonStandardCRDs: false
-    managedGatewayClass:
-      serviceType: ${api_gateway_service_type}
-
 # --- Consul UI ---
 ui:
   enabled: ${enable_ui}
   service:
     type: ${ui_service_type}
+
+# --- Consul Controller ---
+controller:
+  enabled: ${enable_controller}
+
+# --- Prometheus Integration ---
+prometheus:
+  enabled: ${enable_prometheus}

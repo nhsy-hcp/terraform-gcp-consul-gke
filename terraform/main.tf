@@ -1,6 +1,8 @@
 # Generate random suffix for resource names
-resource "random_id" "suffix" {
-  byte_length = 4
+resource "random_string" "suffix" {
+  length  = 5
+  special = false
+  upper   = false
 }
 
 # Data source to look up existing Cloud DNS zone
@@ -38,6 +40,7 @@ module "gke" {
   project_id             = var.project_id
   region                 = var.region
   cluster_name           = "${var.cluster_name}-${local.suffix}"
+  suffix                 = local.suffix
   node_locations         = local.selected_zones
   network_name           = module.prereqs.network_name
   subnetwork_name        = module.prereqs.subnet_name
@@ -64,21 +67,23 @@ data "http" "my_ip" {
 module "consul" {
   source = "./modules/consul"
 
-  project_id           = var.project_id
-  cluster_name         = module.gke.cluster_name
-  namespace            = var.consul_namespace
-  chart_version        = var.consul_chart_version
-  datacenter           = var.consul_datacenter
-  server_replicas      = var.consul_server_replicas
-  storage_class        = var.consul_storage_class
-  storage_size         = var.consul_storage_size
-  enable_gke_autopilot = var.enable_gke_autopilot
-  enable_cni           = var.consul_enable_cni
-  enable_metrics       = var.consul_enable_metrics
-  enable_ui            = var.consul_enable_ui
-  ui_service_type      = var.consul_ui_service_type
-  acls_enabled         = var.consul_acls_enabled
-  tls_enabled          = var.consul_tls_enabled
+  project_id               = var.project_id
+  cluster_name             = module.gke.cluster_name
+  namespace                = var.consul_namespace
+  chart_version            = var.consul_chart_version
+  datacenter               = var.consul_datacenter
+  server_replicas          = var.consul_server_replicas
+  storage_class            = var.consul_storage_class
+  storage_size             = var.consul_storage_size
+  enable_gke_autopilot     = var.enable_gke_autopilot
+  enable_cni               = var.consul_enable_cni
+  enable_prometheus        = var.consul_enable_prometheus
+  enable_ui                = var.consul_enable_ui
+  ui_service_type          = var.consul_ui_service_type
+  enable_transparent_proxy = var.consul_enable_transparent_proxy
+  enable_controller        = var.consul_enable_controller
+  acls_enabled             = var.consul_acls_enabled
+  tls_enabled              = var.consul_tls_enabled
 
   depends_on = [module.gke.primary_nodes_id]
 }

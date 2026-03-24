@@ -37,10 +37,12 @@ resource "helm_release" "consul" {
       storage_class            = var.storage_class
       enable_tls               = var.tls_enabled
       enable_acls              = var.acls_enabled
-      enable_metrics           = var.enable_metrics
+      enable_prometheus        = var.enable_prometheus
       enable_cni               = var.enable_cni
       enable_ui                = var.enable_ui
       ui_service_type          = var.ui_service_type
+      enable_transparent_proxy = var.enable_transparent_proxy
+      enable_controller        = var.enable_controller
       api_gateway_service_type = "LoadBalancer" # Hardcode or add to variables
       enable_gke_autopilot     = var.enable_gke_autopilot
       gcp_project_id           = var.project_id

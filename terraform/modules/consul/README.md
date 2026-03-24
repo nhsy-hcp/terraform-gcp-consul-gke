@@ -35,8 +35,10 @@ No modules.
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the GKE cluster | `string` | n/a | yes |
 | <a name="input_datacenter"></a> [datacenter](#input\_datacenter) | Consul datacenter name | `string` | `"dc1"` | no |
 | <a name="input_enable_cni"></a> [enable\_cni](#input\_enable\_cni) | Enable CNI for transparent proxy | `bool` | `true` | no |
+| <a name="input_enable_controller"></a> [enable\_controller](#input\_enable\_controller) | Enable Consul controller for CRD management | `bool` | `true` | no |
 | <a name="input_enable_gke_autopilot"></a> [enable\_gke\_autopilot](#input\_enable\_gke\_autopilot) | Enable Consul Autopilot mode (for GKE Autopilot) | `bool` | `false` | no |
-| <a name="input_enable_metrics"></a> [enable\_metrics](#input\_enable\_metrics) | Enable Prometheus metrics | `bool` | `true` | no |
+| <a name="input_enable_prometheus"></a> [enable\_prometheus](#input\_enable\_prometheus) | Deploy a Prometheus instance for monitoring | `bool` | `true` | no |
+| <a name="input_enable_transparent_proxy"></a> [enable\_transparent\_proxy](#input\_enable\_transparent\_proxy) | Enable transparent proxy for service mesh | `bool` | `true` | no |
 | <a name="input_enable_ui"></a> [enable\_ui](#input\_enable\_ui) | Enable Consul UI | `bool` | `true` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace for Consul | `string` | `"consul"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID | `string` | n/a | yes |

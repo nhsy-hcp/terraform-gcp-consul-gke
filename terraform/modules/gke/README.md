@@ -21,6 +21,10 @@ No modules.
 |------|------|
 | [google_container_cluster.primary](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster) | resource |
 | [google_container_node_pool.primary_nodes](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_node_pool) | resource |
+| [google_project_iam_member.gke_nodes_logging](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
+| [google_project_iam_member.gke_nodes_monitoring](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
+| [google_project_iam_member.gke_nodes_stackdriver](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
+| [google_service_account.gke_nodes](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 
 ## Inputs
 
@@ -43,6 +47,7 @@ No modules.
 | <a name="input_region"></a> [region](#input\_region) | GCP region | `string` | n/a | yes |
 | <a name="input_services_range_name"></a> [services\_range\_name](#input\_services\_range\_name) | Secondary range name for services | `string` | n/a | yes |
 | <a name="input_subnetwork_name"></a> [subnetwork\_name](#input\_subnetwork\_name) | VPC subnetwork name | `string` | n/a | yes |
+| <a name="input_suffix"></a> [suffix](#input\_suffix) | Random suffix for resource naming | `string` | n/a | yes |
 
 ## Outputs
 

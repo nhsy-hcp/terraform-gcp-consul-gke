@@ -1,5 +1,5 @@
 locals {
-  suffix = random_id.suffix.hex
+  suffix = random_string.suffix.result
   # Calculate FQDN from prefix and DNS zone (strip trailing dot from GCP dns_name)
   apigw_fqdn = "${var.apigw_prefix}.${trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")}"
 }

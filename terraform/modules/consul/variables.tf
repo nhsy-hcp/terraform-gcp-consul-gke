@@ -52,8 +52,8 @@ variable "acls_enabled" {
   default     = true
 }
 
-variable "enable_metrics" {
-  description = "Enable Prometheus metrics"
+variable "enable_prometheus" {
+  description = "Deploy a Prometheus instance for monitoring"
   type        = bool
   default     = true
 }
@@ -74,6 +74,18 @@ variable "ui_service_type" {
   description = "Kubernetes service type for Consul UI"
   type        = string
   default     = "LoadBalancer"
+}
+
+variable "enable_transparent_proxy" {
+  description = "Enable transparent proxy for service mesh"
+  type        = bool
+  default     = true
+}
+
+variable "enable_controller" {
+  description = "Enable Consul controller for CRD management"
+  type        = bool
+  default     = true
 }
 
 variable "enable_gke_autopilot" {

@@ -13,6 +13,11 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "suffix" {
+  description = "Random suffix for resource naming"
+  type        = string
+}
+
 variable "node_locations" {
   description = "Zones for the regional cluster"
   type        = list(string)

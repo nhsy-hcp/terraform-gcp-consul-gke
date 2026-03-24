@@ -20,7 +20,7 @@ variable "region" {
 variable "cluster_name" {
   description = "Name of the GKE cluster"
   type        = string
-  default     = "consul-mesh-cluster"
+  default     = "consul-mesh"
 }
 
 variable "num_zones" {
@@ -176,8 +176,8 @@ variable "consul_enable_cni" {
   default     = true
 }
 
-variable "consul_enable_metrics" {
-  description = "Enable Prometheus metrics"
+variable "consul_enable_prometheus" {
+  description = "Deploy a Prometheus instance for monitoring"
   type        = bool
   default     = true
 }
@@ -192,6 +192,18 @@ variable "consul_ui_service_type" {
   description = "Kubernetes service type for Consul UI"
   type        = string
   default     = "LoadBalancer"
+}
+
+variable "consul_enable_transparent_proxy" {
+  description = "Enable transparent proxy for service mesh"
+  type        = bool
+  default     = true
+}
+
+variable "consul_enable_controller" {
+  description = "Enable Consul controller for CRD management"
+  type        = bool
+  default     = true
 }
 
 variable "consul_acls_enabled" {

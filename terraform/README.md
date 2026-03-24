@@ -34,7 +34,7 @@
 
 | Name | Type |
 |------|------|
-| [random_id.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
+| [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [google_client_config.current](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config) | data source |
 | [google_compute_zones.available](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_zones) | data source |
 | [google_dns_managed_zone.main](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/dns_managed_zone) | data source |
@@ -53,12 +53,14 @@
 | <a name="input_cert_manager_chart_version"></a> [cert\_manager\_chart\_version](#input\_cert\_manager\_chart\_version) | cert-manager Helm chart version | `string` | `"v1.14.0"` | no |
 | <a name="input_cert_manager_namespace"></a> [cert\_manager\_namespace](#input\_cert\_manager\_namespace) | Kubernetes namespace for cert-manager | `string` | `"cert-manager"` | no |
 | <a name="input_cert_manager_sa_name"></a> [cert\_manager\_sa\_name](#input\_cert\_manager\_sa\_name) | GCP service account name for cert-manager | `string` | `"cert-manager-dns01"` | no |
-| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the GKE cluster | `string` | `"consul-mesh-cluster"` | no |
+| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the GKE cluster | `string` | `"consul-mesh"` | no |
 | <a name="input_consul_acls_enabled"></a> [consul\_acls\_enabled](#input\_consul\_acls\_enabled) | Enable Consul ACLs | `bool` | `true` | no |
 | <a name="input_consul_chart_version"></a> [consul\_chart\_version](#input\_consul\_chart\_version) | Consul Helm chart version | `string` | `"1.9.5"` | no |
 | <a name="input_consul_datacenter"></a> [consul\_datacenter](#input\_consul\_datacenter) | Consul datacenter name | `string` | `"dc1"` | no |
 | <a name="input_consul_enable_cni"></a> [consul\_enable\_cni](#input\_consul\_enable\_cni) | Enable CNI plugin for transparent proxy | `bool` | `true` | no |
-| <a name="input_consul_enable_metrics"></a> [consul\_enable\_metrics](#input\_consul\_enable\_metrics) | Enable Prometheus metrics | `bool` | `true` | no |
+| <a name="input_consul_enable_controller"></a> [consul\_enable\_controller](#input\_consul\_enable\_controller) | Enable Consul controller for CRD management | `bool` | `true` | no |
+| <a name="input_consul_enable_prometheus"></a> [consul\_enable\_prometheus](#input\_consul\_enable\_prometheus) | Deploy a Prometheus instance for monitoring | `bool` | `true` | no |
+| <a name="input_consul_enable_transparent_proxy"></a> [consul\_enable\_transparent\_proxy](#input\_consul\_enable\_transparent\_proxy) | Enable transparent proxy for service mesh | `bool` | `true` | no |
 | <a name="input_consul_enable_ui"></a> [consul\_enable\_ui](#input\_consul\_enable\_ui) | Enable Consul UI | `bool` | `true` | no |
 | <a name="input_consul_namespace"></a> [consul\_namespace](#input\_consul\_namespace) | Kubernetes namespace for Consul | `string` | `"consul"` | no |
 | <a name="input_consul_server_replicas"></a> [consul\_server\_replicas](#input\_consul\_server\_replicas) | Number of Consul server replicas | `number` | `3` | no |
