@@ -1,0 +1,71 @@
+{{ if .Values.tls.enabled }}
+{{ if .Values.tls.clusterIssuer.staging.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.tls.clusterIssuer.staging.name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  acme:
+    server: {{ .Values.tls.clusterIssuer.staging.server }}
+    email: {{ .Values.tls.clusterIssuer.staging.email }}
+    privateKeySecretRef:
+      name: {{ .Values.tls.clusterIssuer.staging.name }}-account-key
+    solvers:
+    - dns01:
+        cloudDNS:
+          project: {{ .Values.global.projectId }}
+{{ end }}
+{{ if .Values.tls.clusterIssuer.production.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.tls.clusterIssuer.production.name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  acme:
+    server: {{ .Values.tls.clusterIssuer.production.server }}
+    email: {{ .Values.tls.clusterIssuer.production.email }}
+    privateKeySecretRef:
+      name: {{ .Values.tls.clusterIssuer.production.name }}-account-key
+    solvers:
+    - dns01:
+        cloudDNS:
+          project: {{ .Values.global.projectId }}
+{{ end }}
+{{ if .Values.tls.certificate.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.tls.certificate.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  secretName: {{ .Values.tls.certificate.secretName }}
+  duration: {{ .Values.tls.certificate.duration }}
+  renewBefore: {{ .Values.tls.certificate.renewBefore }}
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - server auth
+  dnsNames:
+    {{ range .Values.tls.certificate.dnsNames }}
+    - {{ . | quote }}
+    {{ end }}
+  issuerRef:
+    name: {{ .Values.tls.certificate.issuerName }}
+    kind: ClusterIssuer
+    group: cert-manager.io
+{{ end }}
+{{ end }}

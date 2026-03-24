@@ -1,0 +1,56 @@
+# ============================================================================
+# REQUIRED: Core GCP Configuration
+# ============================================================================
+
+# Your GCP project ID where resources will be deployed
+project_id = "my-gcp-project-id"
+
+# Name of your existing Cloud DNS managed zone (e.g., "example-com-zone")
+dns_zone_name = "my-dns-zone-name"
+
+# Email address for Let's Encrypt certificate notifications
+cert_email = "admin@example.com"
+
+# ============================================================================
+# Optional: Cluster & Network (Commented out use defaults)
+# ============================================================================
+
+# Prefix for the API Gateway FQDN (default is "app" -> "app.example.com")
+# apigw_prefix = "app"
+
+# region              = "europe-west1"
+# cluster_name        = "consul-mesh"
+# node_count_per_zone = 1
+# machine_type        = "e2-standard-4"
+
+# network_name  = "consul-gke-network"
+# subnet_cidr   = "10.64.0.0/22"
+# pods_cidr     = "10.64.64.0/18"
+# services_cidr = "10.64.4.0/22"
+
+# ============================================================================
+# Optional: Consul Configuration
+# ============================================================================
+
+# consul_datacenter      = "dc1"
+# consul_server_replicas = 3
+# consul_storage_size    = "10Gi"
+# enable_gke_autopilot   = false
+
+# ============================================================================
+# Optional: DNS and TLS Configuration
+# ============================================================================
+
+# Use Let's Encrypt production issuer (default is false/staging)
+# use_production_issuer = false
+
+# Custom DNS names for the certificate (defaults to domain and wildcard)
+# cert_dns_names = ["app.example.com", "*.app.example.com"]
+
+# ============================================================================
+# Optional: Sample Services Deployment
+# ============================================================================
+
+# deploy_sample_services = true
+# deploy_api_gateway     = true
+# intentions_enabled     = true

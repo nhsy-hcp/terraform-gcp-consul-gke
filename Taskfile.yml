@@ -1,0 +1,361 @@
+version: '3'
+
+vars:
+  PROJECT_ROOT:
+    sh: pwd
+  CONSUL_NAMESPACE:
+    sh: cd terraform && (terraform output -raw consul_namespace 2>/dev/null | grep . || echo "consul")
+  CERT_MANAGER_NAMESPACE:
+    sh: cd terraform && (terraform output -raw cert_manager_namespace 2>/dev/null | grep . || echo "cert-manager")
+
+env:
+  HELM_CACHE_HOME: "{{.PROJECT_ROOT}}/.tmp/helm/cache"
+  HELM_CONFIG_HOME: "{{.PROJECT_ROOT}}/.tmp/helm/config"
+  HELM_DATA_HOME: "{{.PROJECT_ROOT}}/.tmp/helm/data"
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  init:
+    desc: Initialize Terraform and download providers
+    dir: terraform
+    cmds:
+      - terraform init
+      - echo "✓ Terraform initialized"
+
+  setup:
+    desc: Setup Helm repositories and search for Consul versions
+    cmds:
+      - mkdir -p {{.PROJECT_ROOT}}/.tmp/helm/{cache,config,data}
+      - helm repo add hashicorp https://helm.releases.hashicorp.com
+      - helm repo update
+      - helm search repo hashicorp/consul --versions
+
+  validate:
+    desc: Validate Terraform configuration
+    dir: terraform
+    cmds:
+      - terraform validate
+      - echo "✓ Terraform configuration is valid"
+
+  terraform:check-vars:
+    internal: true
+    cmds:
+      - |
+        if [ ! -f terraform/terraform.tfvars ]; then
+          echo "ERROR: terraform/terraform.tfvars is missing. Please create it with your configuration values."
+          exit 1
+        fi
+    silent: true
+
+  plan:
+    desc: Show Terraform execution plan
+    dir: terraform
+    deps:
+      - validate
+      - terraform:check-vars
+    cmds:
+      - terraform plan
+
+  refresh:
+    desc: Refresh Terraform state to match real infrastructure
+    dir: terraform
+    cmds:
+      - terraform refresh
+      - echo "✓ Terraform state refreshed"
+
+  #------------------------------------------------------------------------------
+  # Deployment Workflows
+  #------------------------------------------------------------------------------
+
+  confirm:
+    prompt: "Continue with the next step?"
+    status:
+      - '[[ "{{.CLI_ARGS}}" == *"--yes"* ]]'
+
+  apply:
+    deps: [init]
+    desc: "Staged deployment (prereqs → gke → consul → cert-manager → helm-charts with confirmations, use -- --yes to skip)"
+    cmds:
+      - task: validate
+      - task: apply:prereqs
+      - echo "Prerequisites (VPC, APIs) created. Review outputs before continuing."
+      - task: confirm
+        vars:
+          CLI_ARGS: '{{.CLI_ARGS}}'
+      - task: apply:gke
+      - echo "GKE cluster created. Review outputs before continuing."
+      - task: refresh
+      - task: gke:credentials
+      - task: confirm
+        vars:
+          CLI_ARGS: '{{.CLI_ARGS}}'
+      - task: apply:consul
+      - echo "Consul service mesh deployed. Review outputs before continuing."
+      - task: confirm
+        vars:
+          CLI_ARGS: '{{.CLI_ARGS}}'
+      - task: apply:cert-manager
+      - echo "cert-manager deployed. Review outputs before continuing."
+      - task: confirm
+        vars:
+          CLI_ARGS: '{{.CLI_ARGS}}'
+      - task: apply:helm-charts
+      - echo "Initial Helm charts deployed. Review outputs before continuing."
+      - task: confirm
+        vars:
+          CLI_ARGS: '{{.CLI_ARGS}}'
+      - task: deploy:all
+
+  apply:prereqs:
+    desc: Stage 1 - Deploy prerequisites (VPC, APIs, etc)
+    dir: terraform
+    deps:
+      - terraform:check-vars
+    cmds:
+      - terraform apply -target=module.prereqs -auto-approve
+
+  apply:gke:
+    desc: Stage 2 - Deploy GKE cluster
+    dir: terraform
+    deps:
+      - terraform:check-vars
+    cmds:
+      - terraform apply -target=module.gke -auto-approve
+
+  apply:consul:
+    desc: Stage 3 - Deploy Consul service mesh
+    dir: terraform
+    deps:
+      - terraform:check-vars
+    cmds:
+      - terraform apply -target=module.consul -auto-approve
+
+  apply:cert-manager:
+    desc: Stage 4 - Deploy cert-manager
+    dir: terraform
+    deps:
+      - terraform:check-vars
+    cmds:
+      - terraform apply -target=module.cert_manager -auto-approve
+
+  apply:helm-charts:
+    desc: Stage 5 - Deploy initial application helm charts via Terraform
+    dir: terraform
+    deps:
+      - terraform:check-vars
+    cmds:
+      - terraform apply -auto-approve
+      # - terraform apply -target=module.helm_charts -auto-approve
+
+  destroy:
+    desc: Destroy all Terraform-managed infrastructure
+    dir: terraform
+    cmds:
+      - task: clean:k8s
+      - terraform destroy
+
+  destroy:auto:
+    desc: Destroy all infrastructure without confirmation
+    dir: terraform
+    cmds:
+      - task: clean:k8s
+      - terraform destroy -auto-approve
+
+  gke:credentials:
+    desc: Get GKE cluster credentials
+    dir: terraform
+    vars:
+      CLUSTER_NAME:
+        sh: terraform output -raw cluster_name
+      REGION:
+        sh: terraform output -raw region
+      PROJECT_ID:
+        sh: terraform output -raw project_id
+    cmds:
+      - gcloud container clusters get-credentials {{.CLUSTER_NAME}} --region {{.REGION}} --project {{.PROJECT_ID}} --dns-endpoint
+      - echo "✓ Cluster credentials configured"
+      - kubectl cluster-info
+
+  deploy:services:
+    desc: Deploy sample backend and frontend services via Helm
+    cmds:
+      - helm upgrade --install consul-services ./helm/consul-services --namespace default --create-namespace
+      - echo "✓ Services deployed via Helm"
+      - echo "Waiting for pods to be ready..."
+      - kubectl wait --for=condition=ready pod -l app=backend --timeout=300s || true
+      - kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s || true
+      - echo "✓ All pods are ready"
+
+  deploy:gateway:
+    desc: Deploy API Gateway, routes, and TLS via Helm
+    cmds:
+      - bash scripts/deploy-gateway.sh {{.CONSUL_NAMESPACE}}
+
+  deploy:all:
+    desc: Deploy all Kubernetes resources via Helm charts
+    prompt: "Deploy Sample Services and API Gateway via Helm?"
+    cmds:
+      - task: deploy:services
+      - task: deploy:gateway
+      - echo "✓ All resources deployed"
+
+  status:
+    desc: Show status of all components
+    cmds:
+      - bash scripts/show-status.sh {{.CONSUL_NAMESPACE}}
+
+  consul:get-token:
+    desc: Retrieve Consul bootstrap ACL token
+    cmds:
+      - bash scripts/get-consul-token.sh {{.CONSUL_NAMESPACE}}
+
+  consul:port-forward:
+    desc: Port-forward Consul UI to localhost:8501
+    cmds:
+      - echo "Consul UI will be available at https://localhost:8501"
+      - kubectl port-forward service/consul-ui --namespace {{.CONSUL_NAMESPACE}} 8501:443
+
+  gateway:get-ip:
+    desc: Get API Gateway external IP
+    cmds:
+      - |
+        echo "API Gateway External IP:"
+        kubectl get svc -n {{.CONSUL_NAMESPACE}} \
+          -l component=api-gateway \
+          -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+        echo ""
+
+  gateway:test:
+    desc: Test API Gateway endpoints
+    cmds:
+      - bash scripts/test-gateway.sh {{.CONSUL_NAMESPACE}}
+
+  consul:logs:
+    desc: Show Consul server logs
+    cmds:
+      - kubectl logs -n {{.CONSUL_NAMESPACE}} -l component=server --tail=100 -f
+
+  logs:connect-inject:
+    desc: Show Consul connect-inject logs
+    cmds:
+      - kubectl logs -n {{.CONSUL_NAMESPACE}} -l component=connect-injector --tail=100 -f
+
+  cert-manager:logs:
+    desc: Show cert-manager logs
+    cmds:
+      - kubectl logs -n {{.CERT_MANAGER_NAMESPACE}} -l app=cert-manager --tail=100 -f
+
+  workload-identity:verify:
+    desc: Verify Workload Identity is configured correctly
+    cmds:
+      - bash scripts/verify-workload-identity.sh {{.CERT_MANAGER_NAMESPACE}}
+
+  clean:k8s:
+    desc: Clean up Kubernetes resources (Helm releases)
+    cmds:
+      - helm uninstall consul-gateway -n {{.CONSUL_NAMESPACE}} || true
+      - helm uninstall consul-services -n default || true
+      - echo "✓ Helm releases uninstalled"
+
+  clean:
+    desc: Clean up temporary files and caches
+    dir: terraform
+    cmds:
+      - rm -rf .terraform
+      - rm -f terraform.tfstate*
+      - rm -f .terraform.lock.hcl
+      - echo "✓ Temporary files cleaned up"
+
+  format:
+    desc: Format Terraform files
+    dir: terraform
+    cmds:
+      - terraform fmt -recursive
+      - echo "✓ Terraform files formatted"
+
+  lint:
+    desc: Run linting and validation checks (pre-commit hooks)
+    cmds:
+      - pre-commit run --all-files
+      - echo "✓ All checks passed"
+
+  lint:terraform:
+    desc: Run Terraform-specific linting
+    dir: terraform
+    cmds:
+      - terraform fmt -check -recursive
+      - terraform validate
+      - echo "✓ Terraform checks passed"
+
+  docs:
+    desc: Generate Terraform documentation
+    cmds:
+      - terraform-docs markdown table --output-file TERRAFORM.md .
+      - echo "✓ Documentation generated in TERRAFORM.md"
+    preconditions:
+      - sh: command -v terraform-docs
+        msg: "terraform-docs is not installed. Install from https://terraform-docs.io/"
+
+  consul:upgrade:
+    desc: Upgrade Consul to latest version
+    dir: terraform
+    cmds:
+      - helm repo update
+      - terraform apply -auto-approve
+      - echo "✓ Consul upgraded"
+
+  consul:reinstall:
+    desc: Reinstall the Consul Helm release (Force uninstall + Terraform apply)
+    deps:
+      - terraform:check-vars
+    cmds:
+      - helm uninstall consul -n {{.CONSUL_NAMESPACE}} || true
+      - sleep 30
+      -
+      - task: apply:consul
+      - echo "✓ Consul Helm release reinstalled"
+
+  consul:backup:
+    desc: Create a snapshot of Consul data
+    cmds:
+      - bash scripts/backup-consul.sh {{.CONSUL_NAMESPACE}}
+
+  help:
+    desc: Show detailed help information
+    cmds:
+      - |
+        cat << 'EOF'
+        Consul on GKE - Task Runner Help
+        =================================
+
+        Common Workflows:
+
+        1. Initial Setup:
+           task init
+           task deploy
+           task status
+
+        2. Check Status:
+           task status
+           task gateway:get-ip
+
+        3. Access Consul UI:
+           task consul:get-token
+           task consul:port-forward
+
+        4. Test Deployment:
+           task gateway:test
+
+        5. View Logs:
+           task consul:logs
+           task cert-manager:logs
+
+        6. Cleanup:
+           task destroy
+
+        For more information, see README.md
+        EOF

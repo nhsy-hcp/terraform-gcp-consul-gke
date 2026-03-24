@@ -1,0 +1,96 @@
+# Default values for consul-gateway
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  namespace: consul
+  domain: example.com
+  projectId: my-gcp-project
+
+# API Gateway configuration
+gateway:
+  enabled: true
+  name: api-gateway
+  gatewayClassName: consul
+
+  # HTTP listener (for redirect to HTTPS)
+  http:
+    enabled: true
+    port: 80
+
+  # HTTPS listener (TLS termination)
+  https:
+    enabled: true
+    port: 443
+    hostname: app.example.com
+    tlsSecretName: api-gateway-tls
+    tlsMinVersion: "TLSv1_2"
+
+# HTTP Routes configuration
+routes:
+  enabled: true
+
+  # Frontend route
+  frontend:
+    enabled: true
+    name: frontend-route
+    namespace: default
+    hostname: app.example.com
+    path: /
+    service:
+      name: frontend
+      port: 80
+
+  # Backend route
+  backend:
+    enabled: true
+    name: backend-route
+    namespace: default
+    hostname: app.example.com
+    path: /api
+    service:
+      name: backend
+      port: 80
+
+  # HTTP to HTTPS redirect
+  redirect:
+    enabled: true
+    name: http-redirect
+    statusCode: 301
+
+# ReferenceGrant for cross-namespace routing
+referenceGrant:
+  enabled: true
+  name: allow-gateway-to-services
+  targetNamespace: default
+
+# TLS/Certificate configuration
+tls:
+  enabled: true
+
+  # ClusterIssuer configuration
+  clusterIssuer:
+    staging:
+      enabled: true
+      name: letsencrypt-staging
+      email: admin@example.com
+      server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+    production:
+      enabled: true
+      name: letsencrypt-prod
+      email: admin@example.com
+      server: https://acme-v02.api.letsencrypt.org/directory
+
+  # Certificate configuration
+  certificate:
+    enabled: true
+    name: api-gateway-cert
+    secretName: api-gateway-tls
+    duration: 2160h  # 90 days
+    renewBefore: 720h  # 30 days
+    dnsNames:
+      - app.example.com
+      - "*.app.example.com"
+    issuerName: letsencrypt-staging  # Use letsencrypt-prod after testing

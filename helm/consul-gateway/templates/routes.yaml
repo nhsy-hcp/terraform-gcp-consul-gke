@@ -1,0 +1,104 @@
+{{- if .Values.routes.enabled }}
+{{- if .Values.routes.frontend.enabled }}
+---
+# Route / to frontend service
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.routes.frontend.name }}
+  namespace: {{ .Values.routes.frontend.namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  parentRefs:
+    - name: {{ $.Values.gateway.name }}
+      namespace: {{ $.Values.global.namespace }}
+      sectionName: https
+  hostnames:
+    - {{ .Values.routes.frontend.hostname }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .Values.routes.frontend.path }}
+      backendRefs:
+        - kind: Service
+          name: {{ .Values.routes.frontend.service.name }}
+          port: {{ .Values.routes.frontend.service.port }}
+{{- end }}
+
+{{- if .Values.routes.backend.enabled }}
+---
+# Route /api to backend service
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.routes.backend.name }}
+  namespace: {{ .Values.routes.backend.namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  parentRefs:
+    - name: {{ $.Values.gateway.name }}
+      namespace: {{ $.Values.global.namespace }}
+      sectionName: https
+  hostnames:
+    - {{ .Values.routes.backend.hostname }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .Values.routes.backend.path }}
+      backendRefs:
+        - kind: Service
+          name: {{ .Values.routes.backend.service.name }}
+          port: {{ .Values.routes.backend.service.port }}
+{{- end }}
+
+{{- if .Values.routes.redirect.enabled }}
+---
+# HTTP to HTTPS redirect
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.routes.redirect.name }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  parentRefs:
+    - name: {{ $.Values.gateway.name }}
+      namespace: {{ $.Values.global.namespace }}
+      sectionName: http
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: {{ .Values.routes.redirect.statusCode }}
+{{- end }}
+
+{{- if .Values.referenceGrant.enabled }}
+---
+# ReferenceGrant to allow Gateway in consul namespace to route to services in default namespace
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ .Values.referenceGrant.name }}
+  namespace: {{ .Values.referenceGrant.targetNamespace }}
+  labels:
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: {{ $.Values.global.namespace }}
+  to:
+    - group: ""
+      kind: Service
+{{- end }}
+{{- end }}

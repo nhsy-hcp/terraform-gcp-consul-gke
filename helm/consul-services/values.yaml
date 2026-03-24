@@ -1,0 +1,98 @@
+# Default values for consul-services
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  namespace: default
+  consulNamespace: consul
+
+# Backend service configuration
+backend:
+  enabled: true
+  name: backend
+  replicas: 2
+  image:
+    repository: hashicorp/http-echo
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    port: 80
+    targetPort: 9090
+
+  container:
+    port: 9090
+    message: "Hello from the backend service!"
+
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+  # Consul Connect annotations
+  consul:
+    connect:
+      enabled: true
+
+# Frontend service configuration
+frontend:
+  enabled: true
+  name: frontend
+  replicas: 2
+  image:
+    repository: hashicorp/http-echo
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    port: 80
+    targetPort: 9090
+
+  container:
+    port: 9090
+    message: "Hello from the frontend!"
+
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+  # Consul Connect annotations
+  consul:
+    connect:
+      enabled: true
+    upstreams:
+      - name: backend
+        port: 9091
+
+  # Environment variables
+  env:
+    - name: BACKEND_URL
+      value: "http://localhost:9091"
+
+# Service Intentions
+intentions:
+  enabled: true
+  rules:
+    # Allow frontend and api-gateway -> backend
+    - destination: backend
+      sources:
+        - name: frontend
+          action: allow
+        - name: api-gateway
+          namespace: consul
+          action: allow
+
+    # Allow api-gateway -> frontend
+    - destination: frontend
+      sources:
+        - name: api-gateway
+          namespace: consul
+          action: allow

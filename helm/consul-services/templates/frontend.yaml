@@ -1,0 +1,71 @@
+{{- if .Values.frontend.enabled }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.frontend.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.frontend.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.frontend.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    app: {{ .Values.frontend.name }}
+  ports:
+    - port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.frontend.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.frontend.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.frontend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.frontend.name }}
+      annotations:
+        {{- if .Values.frontend.consul.connect.enabled }}
+        consul.hashicorp.com/connect-inject: "true"
+        {{- end }}
+        {{- if .Values.frontend.consul.upstreams }}
+        consul.hashicorp.com/connect-service-upstreams: {{ range $i, $upstream := .Values.frontend.consul.upstreams }}{{if $i}},{{end}}"{{ $upstream.name }}:{{ $upstream.port }}"{{ end }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.frontend.name }}
+      containers:
+        - name: {{ .Values.frontend.name }}
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          args:
+            - -text={{ .Values.frontend.container.message }}
+            - -listen=:{{ .Values.frontend.container.port }}
+          ports:
+            - containerPort: {{ .Values.frontend.container.port }}
+          {{- if .Values.frontend.env }}
+          env:
+            {{- toYaml .Values.frontend.env | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+{{- end }}

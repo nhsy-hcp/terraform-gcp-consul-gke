@@ -1,0 +1,24 @@
+{{- if .Values.intentions.enabled }}
+{{- range .Values.intentions.rules }}
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: {{ .destination }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  destination:
+    name: {{ .destination }}
+  sources:
+    {{- range .sources }}
+    - name: {{ .name }}
+      {{- if .namespace }}
+      namespace: {{ .namespace }}
+      {{- end }}
+      action: {{ .action }}
+    {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: consul-gateway
+description: Consul API Gateway with TLS configuration
+type: application
+version: 0.1.0
+appVersion: "1.0"
+keywords:
+  - consul
+  - api-gateway
+  - kubernetes-gateway-api
+  - tls
+maintainers:
+  - name: Consul on GKE
+home: https://github.com/your-org/terraform-gcp-consul-gke
+sources:
+  - https://github.com/your-org/terraform-gcp-consul-gke

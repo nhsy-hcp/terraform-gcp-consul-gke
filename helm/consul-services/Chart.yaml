@@ -1,0 +1,15 @@
+apiVersion: v2
+name: consul-services
+description: Sample services for Consul Service Mesh demonstration
+type: application
+version: 0.1.0
+appVersion: "1.0"
+keywords:
+  - consul
+  - service-mesh
+  - demo
+maintainers:
+  - name: Consul on GKE
+home: https://github.com/your-org/terraform-gcp-consul-gke
+sources:
+  - https://github.com/your-org/terraform-gcp-consul-gke

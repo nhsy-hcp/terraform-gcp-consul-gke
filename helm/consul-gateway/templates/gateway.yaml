@@ -1,0 +1,42 @@
+{{- if .Values.gateway.enabled }}
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  gatewayClassName: {{ .Values.gateway.gatewayClassName }}
+  listeners:
+    {{- if .Values.gateway.http.enabled }}
+    # HTTP listener (for redirect to HTTPS)
+    - name: http
+      protocol: HTTP
+      port: {{ .Values.gateway.http.port }}
+      allowedRoutes:
+        namespaces:
+          from: All
+    {{- end }}
+
+    {{- if .Values.gateway.https.enabled }}
+    # HTTPS listener (TLS terminated here)
+    - name: https
+      protocol: HTTPS
+      port: {{ .Values.gateway.https.port }}
+      hostname: {{ .Values.gateway.https.hostname }}
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: {{ .Values.gateway.https.tlsSecretName }}
+            kind: Secret
+            group: ""
+        options:
+          api-gateway.consul.hashicorp.com/tls_min_version: {{ .Values.gateway.https.tlsMinVersion | quote }}
+    {{- end }}
+{{- end }}
