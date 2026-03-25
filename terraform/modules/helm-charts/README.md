@@ -36,6 +36,7 @@ No modules.
 | <a name="input_cert_dns_names"></a> [cert\_dns\_names](#input\_cert\_dns\_names) | DNS names for the certificate | `list(string)` | `[]` | no |
 | <a name="input_cert_email"></a> [cert\_email](#input\_cert\_email) | Email address for Let's Encrypt certificate notifications | `string` | n/a | yes |
 | <a name="input_cert_manager_namespace"></a> [cert\_manager\_namespace](#input\_cert\_manager\_namespace) | cert-manager namespace dependency | `string` | n/a | yes |
+| <a name="input_consul_fqdn"></a> [consul\_fqdn](#input\_consul\_fqdn) | Fully Qualified Domain Name for Consul | `string` | n/a | yes |
 | <a name="input_consul_namespace"></a> [consul\_namespace](#input\_consul\_namespace) | Consul namespace dependency | `string` | n/a | yes |
 | <a name="input_deploy_gateway"></a> [deploy\_gateway](#input\_deploy\_gateway) | Deploy API Gateway with TLS | `bool` | `true` | no |
 | <a name="input_deploy_services"></a> [deploy\_services](#input\_deploy\_services) | Deploy sample services (backend and frontend) | `bool` | `true` | no |

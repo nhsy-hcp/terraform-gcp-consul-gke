@@ -53,7 +53,7 @@ resource "helm_release" "consul_gateway" {
       },
       {
         name  = "gateway.https.hostname"
-        value = var.apigw_fqdn
+        value = "*.${var.consul_fqdn}"
       },
       {
         name  = "routes.frontend.hostname"

@@ -111,10 +111,11 @@ module "helm_charts" {
   apigw_fqdn             = local.apigw_fqdn
   frontend_fqdn          = local.frontend_fqdn
   backend_fqdn           = local.backend_fqdn
+  consul_fqdn            = local.consul_fqdn
   project_id             = var.project_id
   cert_email             = var.cert_email
   use_production_issuer  = var.use_production_issuer
-  cert_dns_names         = ["*.${local.consul_fqdn}", local.consul_fqdn, local.apigw_fqdn]
+  cert_dns_names         = ["*.${local.consul_fqdn}", local.consul_fqdn]
   consul_namespace       = module.consul.namespace
   cert_manager_namespace = module.cert_manager.namespace
   allowed_cidrs          = local.allowed_cidrs

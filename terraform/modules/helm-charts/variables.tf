@@ -57,6 +57,11 @@ variable "apigw_fqdn" {
   type        = string
 }
 
+variable "consul_fqdn" {
+  description = "Fully Qualified Domain Name for Consul"
+  type        = string
+}
+
 variable "frontend_fqdn" {
   description = "Fully Qualified Domain Name for the Frontend service"
   type        = string
