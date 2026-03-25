@@ -32,11 +32,15 @@ echo "Backend:  $BACKEND_FQDN"
 echo ""
 
 echo "Testing HTTPS frontend:"
-curl -k --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/"
+echo "Command: curl -k -v --resolve \"$FRONTEND_FQDN:443:$GATEWAY_IP\" \"https://$FRONTEND_FQDN/\""
+FRONTEND_RESPONSE=$(curl -k -v --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/" 2>&1)
+echo "$FRONTEND_RESPONSE"
 echo ""
 
 echo "Testing HTTPS backend:"
-curl -k --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/"
+echo "Command: curl -k -v --resolve \"$BACKEND_FQDN:443:$GATEWAY_IP\" \"https://$BACKEND_FQDN/\""
+BACKEND_RESPONSE=$(curl -k -v --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/" 2>&1)
+echo "$BACKEND_RESPONSE"
 echo ""
 
 echo "✅ Gateway tests completed successfully!"

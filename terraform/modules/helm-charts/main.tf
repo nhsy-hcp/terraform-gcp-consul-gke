@@ -41,6 +41,9 @@ resource "helm_release" "consul_gateway" {
   chart     = "${path.root}/../helm/consul-gateway"
   namespace = var.gateway_namespace
 
+  # Force recreation on hostname changes
+  recreate_pods = true
+
   set = concat(
     [
       {
