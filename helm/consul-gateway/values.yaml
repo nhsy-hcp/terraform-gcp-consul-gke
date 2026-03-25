@@ -17,7 +17,7 @@ gateway:
 
   # HTTP listener (for redirect to HTTPS)
   http:
-    enabled: true
+    enabled: false
     port: 80
 
   # HTTPS listener (TLS termination)
@@ -56,7 +56,7 @@ routes:
 
   # HTTP to HTTPS redirect
   redirect:
-    enabled: true
+    enabled: false
     name: http-redirect
     statusCode: 301
 

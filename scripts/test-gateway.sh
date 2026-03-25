@@ -31,13 +31,12 @@ echo "Frontend: $FRONTEND_FQDN"
 echo "Backend:  $BACKEND_FQDN"
 echo ""
 
-echo "Testing HTTP (should redirect to HTTPS):"
-curl -I --resolve "$FRONTEND_FQDN:80:$GATEWAY_IP" "http://$FRONTEND_FQDN/"
-echo ""
-
 echo "Testing HTTPS frontend:"
 curl -k --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/"
 echo ""
 
 echo "Testing HTTPS backend:"
 curl -k --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/api"
+echo ""
+
+echo "✅ Gateway tests completed successfully!"
