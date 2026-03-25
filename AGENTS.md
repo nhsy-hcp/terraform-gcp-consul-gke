@@ -33,7 +33,8 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 ### 2. Kubernetes & Helm
 
 - **Namespace Isolation:** Deploy Consul to the `consul` namespace and application services to their respective namespaces (defaulting to `default` or `services`).
-- **Helm Integration:** Manage Kubernetes workloads primarily through Helm charts located in `helm/`.
+- **Terraform-Only Deployments:** ALL Kubernetes workloads and Helm charts MUST be deployed via Terraform modules. NEVER use `helm install` or `helm upgrade` commands directly.
+- **Helm Integration:** Helm charts in `helm/` directory are deployed exclusively through Terraform's `helm_release` resources in the `modules/helm-charts/` module.
 - **Values Templating:** Use `terraform/templates/consul-values.yaml.tpl` for dynamic Consul configuration.
 - **Validation:** Always validate `consul-values.yaml.tpl` against the schema [official Consul Helm chart values.yaml](https://github.com/hashicorp/consul-helm/blob/master/values.yaml)
   to ensure structure and compatibility.

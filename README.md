@@ -31,9 +31,10 @@ This deployment automatically provisions and creates:
 |------|----------------|--------------|
 | gcloud | Latest | [Install gcloud](https://cloud.google.com/sdk/docs/install) |
 | kubectl | 1.25+ | [Install kubectl](https://kubernetes.io/docs/tasks/tools/) |
-| helm | 3.6+ | [Install Helm](https://helm.sh/docs/intro/install/) |
 | terraform | 1.5+ | [Install Terraform](https://developer.hashicorp.com/terraform/downloads) |
 | task | 3.0+ | [Install Task](https://taskfile.dev/installation/) |
+
+**Note:** Helm is used internally by Terraform and does not need to be installed separately.
 
 ### GCP Requirements
 
@@ -67,12 +68,9 @@ cert_email    = "admin@example.com"
 ### 2. Deploy Infrastructure
 
 ```bash
-# Initialize and apply Terraform
+# Initialize and apply Terraform (includes automatic credential configuration)
 task init
 task apply
-
-# Get cluster credentials
-task gke:credentials
 ```
 
 This deploys:
@@ -89,10 +87,10 @@ This deploys:
 task status
 
 # Get API Gateway IP
-task gateway:get-ip
+task gateway:ip
 
 # Access Consul UI
-task consul:get-token
+task consul:token
 task consul:port-forward
 # Visit https://localhost:8501
 ```
@@ -101,11 +99,6 @@ task consul:port-forward
 
 ```bash
 # Test HTTP → HTTPS redirect and service routing
-task consul:get-token
-task consul:port-forward
-task consul:logs
-task cert-manager:logs
-task gateway:get-ip
 task gateway:test
 ```
 
@@ -119,6 +112,8 @@ task gateway:test
 │   ├── outputs.tf                     # Output values
 │   ├── terraform.tfvars.example       # Example configuration
 │   ├── modules/                       # Terraform modules
+│   │   ├── prereqs/                   # VPC, APIs, and prerequisites
+│   │   ├── gke/                       # GKE cluster
 │   │   ├── consul/                    # Consul Helm deployment
 │   │   ├── cert-manager/              # cert-manager with Workload Identity
 │   │   └── helm-charts/               # Services and gateway deployment
@@ -131,7 +126,8 @@ task gateway:test
 │   │   └── templates/
 │   │       ├── backend.yaml
 │   │       ├── frontend.yaml
-│   │       └── intentions.yaml
+│   │       ├── intentions.yaml
+│   │       └── servicedefaults.yaml
 │   └── consul-gateway/                # API Gateway with TLS
 │       ├── Chart.yaml
 │       ├── values.yaml
@@ -139,13 +135,18 @@ task gateway:test
 │           ├── gateway.yaml
 │           ├── routes.yaml
 │           └── tls.yaml
-├── k8s/                               # Raw Kubernetes manifests (legacy)
+├── scripts/                           # Utility scripts
+│   ├── deploy-gateway.sh
+│   ├── get-consul-token.sh
+│   ├── show-status.sh
+│   ├── test-gateway.sh
+│   ├── verify-workload-identity.sh
+│   └── wait-for-lb-ip.sh
 ├── Taskfile.yml                       # Task automation
+├── AGENTS.md                          # AI agent guidelines
 ├── README.md                          # This file
 ├── docs/                              # Documentation
-│   ├── QUICKSTART.md                  # 15-minute deployment guide
 │   └── ARCHITECTURE.md                # Detailed architecture docs
-
 └── LICENSE                            # Apache 2.0 license
 ```
 
@@ -153,7 +154,7 @@ task gateway:test
 
 ### Terraform Variables
 
-Key variables in `terraform/terraform.tfvars`:
+Edit `terraform/terraform.tfvars` (copy from `terraform.tfvars.example`):
 
 ```hcl
 # === Required ===
@@ -178,37 +179,7 @@ consul_enable_gateway  = true
 use_production_issuer = false  # Use staging for testing
 ```
 
-### Helm Chart Customization
-
-Customize services via `helm/consul-services/values.yaml`:
-
-```yaml
-backend:
-  replicas: 2
-  resources:
-    requests:
-      memory: "64Mi"
-      cpu: "100m"
-
-frontend:
-  replicas: 2
-  upstreams:
-    - name: backend
-      port: 9091
-```
-
-Customize gateway via `helm/consul-gateway/values.yaml`:
-
-```yaml
-gateway:
-  https:
-    hostname: app.example.com
-    tlsMinVersion: "TLSv1_2"
-
-tls:
-  certificate:
-    issuerName: letsencrypt-staging  # or letsencrypt-prod
-```
+All infrastructure and services are deployed via Terraform modules. Customize by modifying variables in `terraform.tfvars` and re-running `task apply`.
 
 ## Common Tasks
 
@@ -221,86 +192,45 @@ task --list
 # Infrastructure management
 task init          # Initialize Terraform
 task plan          # Show execution plan
-task apply         # Apply infrastructure changes (staged, up to Helm charts)
-task destroy       # Destroy all infrastructure (uninstalls K8s first)
-
-# Deployment
-task deploy:all       # Manually deploy/update services and gateway via Helm CLI
-task deploy:services  # Manually deploy/update only services
-task deploy:gateway   # Manually deploy/update only gateway
+task apply         # Apply infrastructure changes (staged deployment)
+task destroy       # Destroy all infrastructure
 
 # Operations
 task status           # Show status of all components
 task gateway:ip       # Get API Gateway external IP
-task test             # Run all tests
-task test:gateway     # Test gateway endpoints
+task gateway:test     # Test gateway endpoints
 
 # Consul operations
-task consul:get-token      # Get bootstrap ACL token
-task consul:port-forward   # Access Consul UI locally
+task consul:token         # Get bootstrap ACL token
+task consul:port-forward  # Access Consul UI locally
+task consul:logs          # View Consul server logs
 
 # UI operations (open in browser)
-task ui                    # Open frontend, backend, and Consul UI
-task ui:consul             # Open Consul UI only
-task ui:gateway            # Open API Gateway URL
+task ui                # Open frontend, backend, and Consul UI
+task ui:consul         # Open Consul UI only
+task ui:gateway        # Open API Gateway URL
 
 # Logs
-task consul:logs           # View Consul server logs
-task cert-manager:logs     # View cert-manager logs
+task cert-manager:logs # View cert-manager logs
 
 # Cleanup
-task uninstall    # Uninstall all Helm releases and namespaces
-task clean        # Clean local Terraform cache and temp files
-```
-
-### Manual Helm Operations
-
-```bash
-# Deploy services with custom values
-helm upgrade --install consul-services ./helm/consul-services \
-  --namespace default \
-  --set backend.replicas=3
-
-# Deploy gateway with custom domain
-helm upgrade --install consul-gateway ./helm/consul-gateway \
-  --namespace consul \
-  --set global.domain=myapp.example.com \
-  --set tls.certificate.issuerName=letsencrypt-prod
-
-# List releases
-helm list -A
-
-# Uninstall
-helm uninstall consul-services -n default
-helm uninstall consul-gateway -n consul
+task uninstall         # Uninstall all Helm releases and namespaces
+task clean             # Clean local Terraform cache and temp files
 ```
 
 ## Security
 
-### Production Checklist
-
-- [x] TLS enabled globally
-- [x] ACLs enabled and managed
-- [x] mTLS between services
-- [x] Workload Identity for GCP IAM
-- [x] Let's Encrypt certificates
-- [ ] Default-deny service intentions
-- [ ] Consul UI access restricted
-- [ ] Network policies configured
-
 ### Switching to Production Certificates
 
-After testing with staging:
+After testing with staging certificates, update `terraform/terraform.tfvars`:
+
+```hcl
+use_production_issuer = true
+```
+
+Then apply the change:
 
 ```bash
-# Update gateway Helm release
-helm upgrade consul-gateway ./helm/consul-gateway \
-  --namespace consul \
-  --reuse-values \
-  --set tls.certificate.issuerName=letsencrypt-prod
-
-# Or update via Terraform
-# Set use_production_issuer = true in terraform.tfvars
 task apply
 ```
 
@@ -356,7 +286,6 @@ kubectl logs -n consul -l component=api-gateway
 
 ## Documentation
 
-- [Quick Start Guide](docs/QUICKSTART.md) - 15-minute deployment guide
 - [Architecture Documentation](docs/ARCHITECTURE.md) - Detailed system design
 
 ## Additional Resources
