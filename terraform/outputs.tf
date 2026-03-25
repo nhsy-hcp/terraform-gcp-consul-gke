@@ -147,7 +147,7 @@ output "consul_fqdn" {
   value       = "https://${local.apigw_fqdn}"
 }
 
-output "consul_ui_url" {
+output "consul_url" {
   description = "FQDN for the Consul UI"
   value       = "https://${local.consul_fqdn}"
 }

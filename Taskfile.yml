@@ -143,8 +143,10 @@ tasks:
     deps:
       - terraform:check-vars
     cmds:
+      - echo "Waiting for API Gateway load balancer IP..."
+      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}}
       - terraform apply -auto-approve
-      # - terraform apply -target=module.helm_charts -auto-approve
+    silent: true
 
   destroy:
     desc: Destroy all Terraform-managed infrastructure
@@ -203,7 +205,7 @@ tasks:
     cmds:
       - bash scripts/show-status.sh {{.CONSUL_NAMESPACE}}
 
-  consul:get-token:
+  consul:token:
     desc: Retrieve Consul bootstrap ACL token
     cmds:
       - bash scripts/get-consul-token.sh {{.CONSUL_NAMESPACE}}
@@ -213,6 +215,55 @@ tasks:
     cmds:
       - echo "Consul UI will be available at https://localhost:8501"
       - kubectl port-forward service/consul-ui --namespace {{.CONSUL_NAMESPACE}} 8501:443
+
+  ui:
+    desc: Open Frontend and Backend URLs in browser
+    dir: terraform
+    cmds:
+      - |
+        FRONTEND_URL=$(terraform output -raw api_gateway_frontend_url 2>/dev/null || true)
+        BACKEND_URL=$(terraform output -raw api_gateway_backend_url 2>/dev/null || true)
+
+        if [ -z "$FRONTEND_URL" ] || [ -z "$BACKEND_URL" ]; then
+          echo "Error: Unable to retrieve URLs from Terraform outputs."
+          echo "Ensure infrastructure is deployed with 'task apply'."
+          exit 1
+        fi
+
+        echo "Opening Frontend at $FRONTEND_URL"
+        open "$FRONTEND_URL" || xdg-open "$FRONTEND_URL" || echo "Please open $FRONTEND_URL in your browser"
+        sleep 1
+        echo "Opening Backend at $BACKEND_URL"
+        open "$BACKEND_URL" || xdg-open "$BACKEND_URL" || echo "Please open $BACKEND_URL in your browser"
+
+  ui:consul:
+    desc: Open Consul UI in browser
+    dir: terraform
+    cmds:
+      - |
+        CONSUL_URL=$(terraform output -raw consul_url 2>/dev/null || true)
+        if [ -z "$CONSUL_URL" ]; then
+          echo "Error: Unable to retrieve Consul UI URL from Terraform outputs."
+          echo "Ensure infrastructure is deployed with 'task apply'."
+          exit 1
+        fi
+        echo "Opening Consul UI at $CONSUL_URL"
+        open "$CONSUL_URL" || xdg-open "$CONSUL_URL" || echo "Please open $CONSUL_URL in your browser"
+
+  ui:gateway:
+    desc: Open API Gateway URL in browser
+    dir: terraform
+    cmds:
+      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 30
+      - |
+        GATEWAY_URL=$(terraform output -raw consul_fqdn 2>/dev/null || true)
+        if [ -z "$GATEWAY_URL" ]; then
+          echo "Error: Unable to retrieve API Gateway URL from Terraform outputs."
+          echo "Ensure infrastructure is deployed with 'task apply'."
+          exit 1
+        fi
+        echo "Opening API Gateway at $GATEWAY_URL"
+        open "$GATEWAY_URL" || xdg-open "$GATEWAY_URL" || echo "Please open $GATEWAY_URL in your browser"
 
   gateway:ip:
     desc: Get API Gateway external IP
@@ -323,7 +374,6 @@ tasks:
     cmds:
       - helm uninstall consul -n {{.CONSUL_NAMESPACE}} || true
       - sleep 30
-      -
       - task: apply:consul
       - echo "✓ Consul Helm release reinstalled"
 

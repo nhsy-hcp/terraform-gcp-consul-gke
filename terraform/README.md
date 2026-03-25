@@ -110,7 +110,7 @@
 | <a name="output_consul_lb_address"></a> [consul\_lb\_address](#output\_consul\_lb\_address) | External IP of the Consul UI |
 | <a name="output_consul_namespace"></a> [consul\_namespace](#output\_consul\_namespace) | Kubernetes namespace where Consul is deployed |
 | <a name="output_consul_release_name"></a> [consul\_release\_name](#output\_consul\_release\_name) | Helm release name for Consul |
-| <a name="output_consul_ui_url"></a> [consul\_ui\_url](#output\_consul\_ui\_url) | FQDN for the Consul UI |
+| <a name="output_consul_url"></a> [consul\_url](#output\_consul\_url) | FQDN for the Consul UI |
 | <a name="output_dns_zone_dns_name"></a> [dns\_zone\_dns\_name](#output\_dns\_zone\_dns\_name) | Cloud DNS managed zone DNS name |
 | <a name="output_dns_zone_name"></a> [dns\_zone\_name](#output\_dns\_zone\_name) | Cloud DNS managed zone name |
 | <a name="output_gateway_release_name"></a> [gateway\_release\_name](#output\_gateway\_release\_name) | Helm release name for consul-gateway |
