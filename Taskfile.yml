@@ -105,11 +105,6 @@ tasks:
           CLI_ARGS: '{{.CLI_ARGS}}'
       - task: apply:helm-charts
       - echo "Initial Helm charts deployed. Review outputs before continuing."
-      - task: confirm
-        vars:
-          CLI_ARGS: '{{.CLI_ARGS}}'
-      - task: deploy:all
-
   apply:prereqs:
     desc: Stage 1 - Deploy prerequisites (VPC, APIs, etc)
     dir: terraform
@@ -155,14 +150,14 @@ tasks:
     desc: Destroy all Terraform-managed infrastructure
     dir: terraform
     cmds:
-      - task: clean:k8s
+      - task: uninstall
       - terraform destroy
 
   destroy:auto:
     desc: Destroy all infrastructure without confirmation
     dir: terraform
     cmds:
-      - task: clean:k8s
+      - task: uninstall
       - terraform destroy -auto-approve
 
   gke:credentials:
@@ -219,7 +214,7 @@ tasks:
       - echo "Consul UI will be available at https://localhost:8501"
       - kubectl port-forward service/consul-ui --namespace {{.CONSUL_NAMESPACE}} 8501:443
 
-  gateway:get-ip:
+  gateway:ip:
     desc: Get API Gateway external IP
     cmds:
       - |
@@ -254,12 +249,18 @@ tasks:
     cmds:
       - bash scripts/verify-workload-identity.sh {{.CERT_MANAGER_NAMESPACE}}
 
-  clean:k8s:
-    desc: Clean up Kubernetes resources (Helm releases)
+  uninstall:
+    desc: Clean up Kubernetes resources (Helm releases and namespaces)
+    silent: true
     cmds:
       - helm uninstall consul-gateway -n {{.CONSUL_NAMESPACE}} || true
       - helm uninstall consul-services -n default || true
-      - echo "✓ Helm releases uninstalled"
+      - helm uninstall consul -n {{.CONSUL_NAMESPACE}} || true
+      - helm uninstall cert-manager -n {{.CERT_MANAGER_NAMESPACE}} || true
+      - kubectl delete pvc --all -n {{.CONSUL_NAMESPACE}} --wait=false || true
+      - kubectl delete namespace {{.CONSUL_NAMESPACE}} --wait=false || true
+      - kubectl delete namespace {{.CERT_MANAGER_NAMESPACE}} --wait=false || true
+      - echo "✓ Kubernetes resources, PVCs, and namespaces marked for deletion"
 
   clean:
     desc: Clean up temporary files and caches
@@ -300,14 +301,6 @@ tasks:
       - sh: command -v terraform-docs
         msg: "terraform-docs is not installed. Install from https://terraform-docs.io/"
 
-  consul:upgrade:
-    desc: Upgrade Consul to latest version
-    dir: terraform
-    cmds:
-      - helm repo update
-      - terraform apply -auto-approve
-      - echo "✓ Consul upgraded"
-
   consul:reinstall:
     desc: Reinstall the Consul Helm release (Force uninstall + Terraform apply)
     deps:
@@ -341,7 +334,7 @@ tasks:
 
         2. Check Status:
            task status
-           task gateway:get-ip
+           task gateway:ip
 
         3. Access Consul UI:
            task consul:get-token

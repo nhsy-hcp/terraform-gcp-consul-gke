@@ -78,7 +78,7 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 
 ### 5. Source Control
 
-- **Explicit Staging:** Never use `git add .` or `git add -A`. Always explicitly stage files by naming them individually or using targeted glob patterns.
+- **Explicit Staging:** NEVER use `git add .` or `git add -A`. Always explicitly stage files by naming them individually or using targeted glob patterns.
 - **Selective Commits:** Prefer smaller, logical commits over large, monolithic ones.
 
 ## Operational Workflows

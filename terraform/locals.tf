@@ -3,6 +3,7 @@ locals {
   domain = trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")
   # Calculate FQDNs
   apigw_fqdn    = "apigw.consul-${local.suffix}.${local.domain}"
+  consul_fqdn   = "consul-${local.suffix}.${local.domain}"
   frontend_fqdn = "frontend.consul-${local.suffix}.${local.domain}"
   backend_fqdn  = "backend.consul-${local.suffix}.${local.domain}"
 }
@@ -13,12 +14,12 @@ locals {
 
 locals {
   # Refactored IP lookup logic
-  my_ip_cidr = length(data.http.my_ip) > 0 ? "${chomp(data.http.my_ip[0].response_body)}/32" : null
+  mgmt_ip_cidr = length(data.http.mgmt_ip) > 0 ? "${chomp(data.http.mgmt_ip[0].response_body)}/32" : null
 
   # Use current IP if no custom networks provided, otherwise use custom networks
   authorized_networks = length(var.additional_authorized_networks) == 0 ? [
     {
-      cidr_block   = local.my_ip_cidr
+      cidr_block   = local.mgmt_ip_cidr
       display_name = "Current IP (auto-detected)"
     }
   ] : var.additional_authorized_networks

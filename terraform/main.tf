@@ -58,7 +58,7 @@ module "gke" {
 }
 
 # Fetch current public IP for master authorized networks (only if no custom networks provided)
-data "http" "my_ip" {
+data "http" "mgmt_ip" {
   count = length(var.additional_authorized_networks) == 0 ? 1 : 0
   url   = "https://ipv4.icanhazip.com"
 }

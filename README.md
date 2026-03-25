@@ -221,13 +221,13 @@ task --list
 # Infrastructure management
 task init          # Initialize Terraform
 task plan          # Show execution plan
-task apply        # Apply infrastructure changes (staged)
-task destroy       # Destroy all infrastructure
+task apply         # Apply infrastructure changes (staged, up to Helm charts)
+task destroy       # Destroy all infrastructure (uninstalls K8s first)
 
 # Deployment
-task deploy:all       # Deploy services and gateway via Helm
-task deploy:services  # Deploy only services
-task deploy:gateway   # Deploy only gateway
+task deploy:all       # Manually deploy/update services and gateway via Helm CLI
+task deploy:services  # Manually deploy/update only services
+task deploy:gateway   # Manually deploy/update only gateway
 
 # Operations
 task status           # Show status of all components
@@ -243,8 +243,8 @@ task consul:logs           # View Consul server logs
 task cert-manager:logs     # View cert-manager logs
 
 # Cleanup
-task clean:k8s    # Uninstall Helm releases
-task clean        # Clean Terraform cache
+task uninstall    # Uninstall all Helm releases and namespaces
+task clean        # Clean local Terraform cache and temp files
 ```
 
 ### Manual Helm Operations

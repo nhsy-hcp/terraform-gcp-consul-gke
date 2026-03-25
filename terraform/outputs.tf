@@ -149,7 +149,7 @@ output "consul_fqdn" {
 
 output "consul_ui_url" {
   description = "FQDN for the Consul UI"
-  value       = "https://consul-${local.suffix}.${local.domain}"
+  value       = "https://${local.consul_fqdn}"
 }
 
 output "api_gateway_frontend_url" {
