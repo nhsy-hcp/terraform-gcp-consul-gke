@@ -21,6 +21,15 @@ server:
   replicas: ${replicas}
   bootstrapExpect: ${bootstrap_expect}
 
+  # Tune server for higher xDS load
+  extraConfig: |
+    {
+      "limits": {
+        "http_max_conns_per_client": 1000,
+        "rpc_max_conns_per_client": 1000
+      }
+    }
+
   serviceAccount:
     annotations: |
       iam.gke.io/gcp-service-account: ${server_iam_sa}
@@ -28,11 +37,11 @@ server:
   # Resource requests/limits for production
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "500m"
-    limits:
       memory: "1Gi"
       cpu: "1000m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
 
   storage: ${storage_size}
   storageClass: ${storage_class}

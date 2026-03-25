@@ -12,16 +12,18 @@ if [ -z "$GATEWAY_IP" ]; then
   exit 1
 fi
 
-echo "Testing Gateway at: $GATEWAY_IP"
+DOMAIN=$(cd terraform && terraform output -raw dns_zone_dns_name | sed 's/\.$//')
+
+echo "Testing Gateway at: $GATEWAY_IP (Domain: $DOMAIN)"
 echo ""
 
 echo "Testing HTTP (should redirect to HTTPS):"
-curl -I "http://$GATEWAY_IP/"
+curl -I -H "Host: $DOMAIN" "http://$GATEWAY_IP/"
 echo ""
 
 echo "Testing HTTPS frontend:"
-curl -k "https://$GATEWAY_IP/"
+curl -k -H "Host: $DOMAIN" "https://$GATEWAY_IP/"
 echo ""
 
 echo "Testing HTTPS backend:"
-curl -k "https://$GATEWAY_IP/api"
+curl -k -H "Host: $DOMAIN" "https://$GATEWAY_IP/api"

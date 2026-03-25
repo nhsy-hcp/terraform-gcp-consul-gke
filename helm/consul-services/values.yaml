@@ -87,12 +87,10 @@ intentions:
         - name: frontend
           action: allow
         - name: api-gateway
-          namespace: consul
           action: allow
 
     # Allow api-gateway -> frontend
     - destination: frontend
       sources:
         - name: api-gateway
-          namespace: consul
           action: allow

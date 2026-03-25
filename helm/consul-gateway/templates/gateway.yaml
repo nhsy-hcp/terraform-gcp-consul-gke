@@ -11,13 +11,13 @@ metadata:
   annotations:
     {{- if .Values.gateway.loadBalancerSourceRanges }}
     # Restrict external LoadBalancer access
-    api-gateway.consul.hashicorp.com/service_load_balancer_source_ranges: {{ .Values.gateway.loadBalancerSourceRanges | toJson }}
+    api-gateway.consul.hashicorp.com/service_load_balancer_source_ranges: {{ .Values.gateway.loadBalancerSourceRanges | toJson | quote }}
     {{- end }}
 spec:
   gatewayClassName: {{ .Values.gateway.gatewayClassName }}
   listeners:
     {{- if .Values.gateway.http.enabled }}
-    # HTTP listener (for redirect to HTTPS)
+    # HTTP listener
     - name: http
       protocol: HTTP
       port: {{ .Values.gateway.http.port }}

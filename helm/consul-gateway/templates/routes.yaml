@@ -69,6 +69,8 @@ metadata:
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
     release: {{ $.Release.Name }}
 spec:
+  hostnames:
+    - {{ .Values.routes.frontend.hostname }}
   parentRefs:
     - name: {{ $.Values.gateway.name }}
       namespace: {{ $.Values.global.namespace }}
@@ -79,6 +81,11 @@ spec:
           requestRedirect:
             scheme: https
             statusCode: {{ .Values.routes.redirect.statusCode }}
+      backendRefs:
+        - kind: Service
+          name: {{ .Values.routes.frontend.service.name }}
+          port: {{ .Values.routes.frontend.service.port }}
+          namespace: {{ .Values.routes.frontend.namespace }}
 {{- end }}
 
 {{- if .Values.referenceGrant.enabled }}
