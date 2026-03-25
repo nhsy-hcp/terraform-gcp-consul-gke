@@ -25,6 +25,7 @@ No modules.
 | [google_service_account_iam_member.consul_server_workload_identity](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_member) | resource |
 | [helm_release.consul](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
 | [kubernetes_namespace_v1.consul](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
+| [kubernetes_service_v1.consul_ui](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/service_v1) | data source |
 
 ## Inputs
 
@@ -49,6 +50,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_chart_version"></a> [chart\_version](#output\_chart\_version) | Consul Helm chart version |
+| <a name="output_consul_ui_ip"></a> [consul\_ui\_ip](#output\_consul\_ui\_ip) | External IP of the Consul UI service |
 | <a name="output_datacenter"></a> [datacenter](#output\_datacenter) | Consul datacenter name |
 | <a name="output_namespace"></a> [namespace](#output\_namespace) | Kubernetes namespace where Consul is deployed |
 | <a name="output_release_name"></a> [release\_name](#output\_release\_name) | Helm release name for Consul |

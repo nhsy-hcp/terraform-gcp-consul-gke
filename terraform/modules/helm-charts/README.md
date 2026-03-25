@@ -10,6 +10,7 @@ No requirements.
 | Name | Version |
 |------|---------|
 | <a name="provider_helm"></a> [helm](#provider\_helm) | 3.1.1 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 3.0.1 |
 
 ## Modules
 
@@ -21,6 +22,7 @@ No modules.
 |------|------|
 | [helm_release.consul_gateway](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
 | [helm_release.consul_services](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
+| [kubernetes_service_v1.api_gateway](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/service_v1) | data source |
 
 ## Inputs
 
@@ -48,6 +50,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_api_gateway_ip"></a> [api\_gateway\_ip](#output\_api\_gateway\_ip) | External IP of the API Gateway service |
 | <a name="output_gateway_namespace"></a> [gateway\_namespace](#output\_gateway\_namespace) | Kubernetes namespace for gateway |
 | <a name="output_gateway_release_name"></a> [gateway\_release\_name](#output\_gateway\_release\_name) | Helm release name for consul-gateway |
 | <a name="output_services_namespace"></a> [services\_namespace](#output\_services\_namespace) | Kubernetes namespace for services |

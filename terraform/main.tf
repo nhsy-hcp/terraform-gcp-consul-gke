@@ -119,3 +119,24 @@ module "helm_charts" {
 
   depends_on = [module.consul, module.cert_manager]
 }
+
+# DNS Record for API Gateway (Root Domain)
+resource "google_dns_record_set" "api_gateway" {
+  count        = var.deploy_api_gateway ? 1 : 0
+  name         = "${local.apigw_fqdn}."
+  type         = "A"
+  ttl          = 300
+  managed_zone = data.google_dns_managed_zone.main.name
+  project      = var.project_id
+  rrdatas      = [module.helm_charts.api_gateway_ip]
+}
+
+# DNS Record for Consul UI
+resource "google_dns_record_set" "consul_ui" {
+  name         = "consul-${local.suffix}.${trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")}."
+  type         = "A"
+  ttl          = 300
+  managed_zone = data.google_dns_managed_zone.main.name
+  project      = var.project_id
+  rrdatas      = [module.consul.consul_ui_ip]
+}

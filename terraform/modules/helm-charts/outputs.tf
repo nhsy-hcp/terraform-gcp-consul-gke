@@ -17,3 +17,8 @@ output "gateway_namespace" {
   description = "Kubernetes namespace for gateway"
   value       = var.gateway_namespace
 }
+
+output "api_gateway_ip" {
+  description = "External IP of the API Gateway service"
+  value       = var.deploy_gateway ? data.kubernetes_service_v1.api_gateway[0].status[0].load_balancer[0].ingress[0].ip : null
+}

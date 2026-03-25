@@ -34,6 +34,8 @@
 
 | Name | Type |
 |------|------|
+| [google_dns_record_set.api_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
+| [google_dns_record_set.consul_ui](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [google_client_config.current](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config) | data source |
 | [google_compute_zones.available](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_zones) | data source |
@@ -92,6 +94,9 @@
 
 | Name | Description |
 |------|-------------|
+| <a name="output_api_gateway_backend_url"></a> [api\_gateway\_backend\_url](#output\_api\_gateway\_backend\_url) | URL for the sample backend service |
+| <a name="output_api_gateway_frontend_url"></a> [api\_gateway\_frontend\_url](#output\_api\_gateway\_frontend\_url) | URL for the sample frontend service |
+| <a name="output_api_gateway_ip"></a> [api\_gateway\_ip](#output\_api\_gateway\_ip) | External IP of the API Gateway |
 | <a name="output_authorized_networks"></a> [authorized\_networks](#output\_authorized\_networks) | Authorized networks configured for GKE master access |
 | <a name="output_cert_manager_namespace"></a> [cert\_manager\_namespace](#output\_cert\_manager\_namespace) | Kubernetes namespace where cert-manager is deployed |
 | <a name="output_cert_manager_release_name"></a> [cert\_manager\_release\_name](#output\_cert\_manager\_release\_name) | Helm release name for cert-manager |
@@ -101,8 +106,11 @@
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | GKE cluster name |
 | <a name="output_consul_chart_version"></a> [consul\_chart\_version](#output\_consul\_chart\_version) | Consul Helm chart version |
 | <a name="output_consul_datacenter"></a> [consul\_datacenter](#output\_consul\_datacenter) | Consul datacenter name |
+| <a name="output_consul_fqdn"></a> [consul\_fqdn](#output\_consul\_fqdn) | FQDN for the API Gateway (Root) |
 | <a name="output_consul_namespace"></a> [consul\_namespace](#output\_consul\_namespace) | Kubernetes namespace where Consul is deployed |
 | <a name="output_consul_release_name"></a> [consul\_release\_name](#output\_consul\_release\_name) | Helm release name for Consul |
+| <a name="output_consul_ui_ip"></a> [consul\_ui\_ip](#output\_consul\_ui\_ip) | External IP of the Consul UI |
+| <a name="output_consul_ui_url"></a> [consul\_ui\_url](#output\_consul\_ui\_url) | FQDN for the Consul UI |
 | <a name="output_dns_zone_dns_name"></a> [dns\_zone\_dns\_name](#output\_dns\_zone\_dns\_name) | Cloud DNS managed zone DNS name |
 | <a name="output_dns_zone_name"></a> [dns\_zone\_name](#output\_dns\_zone\_name) | Cloud DNS managed zone name |
 | <a name="output_gateway_release_name"></a> [gateway\_release\_name](#output\_gateway\_release\_name) | Helm release name for consul-gateway |

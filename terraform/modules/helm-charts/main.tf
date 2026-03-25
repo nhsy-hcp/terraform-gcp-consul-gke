@@ -100,3 +100,13 @@ resource "helm_release" "consul_gateway" {
 
   depends_on = [var.consul_namespace, var.cert_manager_namespace]
 }
+
+# Data source to fetch the external IP of the API Gateway service
+data "kubernetes_service_v1" "api_gateway" {
+  count = var.deploy_gateway ? 1 : 0
+  metadata {
+    name      = "api-gateway"
+    namespace = var.gateway_namespace
+  }
+  depends_on = [helm_release.consul_gateway]
+}

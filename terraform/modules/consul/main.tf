@@ -49,3 +49,12 @@ resource "helm_release" "consul" {
 
   depends_on = [kubernetes_namespace_v1.consul]
 }
+
+# Data source to fetch the external IP of the Consul UI service
+data "kubernetes_service_v1" "consul_ui" {
+  metadata {
+    name      = "consul-ui"
+    namespace = kubernetes_namespace_v1.consul.metadata[0].name
+  }
+  depends_on = [helm_release.consul]
+}

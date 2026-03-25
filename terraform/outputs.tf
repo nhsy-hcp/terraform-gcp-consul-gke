@@ -137,3 +137,37 @@ output "dns_zone_dns_name" {
   description = "Cloud DNS managed zone DNS name"
   value       = data.google_dns_managed_zone.main.dns_name
 }
+
+# ============================================================================
+# Access URLs and IPs
+# ============================================================================
+
+output "consul_fqdn" {
+  description = "FQDN for the API Gateway (Root)"
+  value       = "https://${local.apigw_fqdn}"
+}
+
+output "consul_ui_url" {
+  description = "FQDN for the Consul UI"
+  value       = "https://consul-${local.suffix}.${trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")}"
+}
+
+output "api_gateway_frontend_url" {
+  description = "URL for the sample frontend service"
+  value       = "https://${local.apigw_fqdn}/"
+}
+
+output "api_gateway_backend_url" {
+  description = "URL for the sample backend service"
+  value       = "https://${local.apigw_fqdn}/api"
+}
+
+output "api_gateway_ip" {
+  description = "External IP of the API Gateway"
+  value       = module.helm_charts.api_gateway_ip
+}
+
+output "consul_ui_ip" {
+  description = "External IP of the Consul UI"
+  value       = module.consul.consul_ui_ip
+}
