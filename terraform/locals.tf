@@ -1,7 +1,10 @@
 locals {
   suffix = random_string.suffix.result
-  # Calculate FQDN from prefix and DNS zone (strip trailing dot from GCP dns_name)
-  apigw_fqdn = "${var.apigw_prefix}.${trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")}"
+  domain = trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")
+  # Calculate FQDNs
+  apigw_fqdn    = "apigw.consul-${local.suffix}.${local.domain}"
+  frontend_fqdn = "frontend.consul-${local.suffix}.${local.domain}"
+  backend_fqdn  = "backend.consul-${local.suffix}.${local.domain}"
 }
 
 locals {

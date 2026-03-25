@@ -109,6 +109,8 @@ module "helm_charts" {
   frontend_replicas      = var.frontend_replicas
   intentions_enabled     = var.intentions_enabled
   apigw_fqdn             = local.apigw_fqdn
+  frontend_fqdn          = local.frontend_fqdn
+  backend_fqdn           = local.backend_fqdn
   project_id             = var.project_id
   cert_email             = var.cert_email
   use_production_issuer  = var.use_production_issuer
@@ -128,15 +130,37 @@ resource "google_dns_record_set" "api_gateway" {
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.main.name
   project      = var.project_id
-  rrdatas      = [module.helm_charts.api_gateway_ip]
+  rrdatas      = [module.helm_charts.apigw_lb_address]
 }
 
-# DNS Record for Consul UI
-resource "google_dns_record_set" "consul_ui" {
-  name         = "consul-${local.suffix}.${trimsuffix(data.google_dns_managed_zone.main.dns_name, ".")}."
+# DNS Record for Frontend
+resource "google_dns_record_set" "frontend" {
+  count        = var.deploy_api_gateway && var.deploy_sample_services ? 1 : 0
+  name         = "${local.frontend_fqdn}."
   type         = "A"
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.main.name
   project      = var.project_id
-  rrdatas      = [module.consul.consul_ui_ip]
+  rrdatas      = [module.helm_charts.apigw_lb_address]
+}
+
+# DNS Record for Backend
+resource "google_dns_record_set" "backend" {
+  count        = var.deploy_api_gateway && var.deploy_sample_services ? 1 : 0
+  name         = "${local.backend_fqdn}."
+  type         = "A"
+  ttl          = 300
+  managed_zone = data.google_dns_managed_zone.main.name
+  project      = var.project_id
+  rrdatas      = [module.helm_charts.apigw_lb_address]
+}
+
+# DNS Record for Consul UI
+resource "google_dns_record_set" "consul_ui" {
+  name         = "consul-${local.suffix}.${local.domain}."
+  type         = "A"
+  ttl          = 300
+  managed_zone = data.google_dns_managed_zone.main.name
+  project      = var.project_id
+  rrdatas      = [module.consul.consul_lb_address]
 }

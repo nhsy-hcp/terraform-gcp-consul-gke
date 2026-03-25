@@ -213,12 +213,6 @@ variable "dns_zone_name" {
   type        = string
 }
 
-variable "apigw_prefix" {
-  description = "Prefix to append to the DNS zone domain (e.g., 'app' for 'app.example.com')"
-  type        = string
-  default     = "consul"
-}
-
 variable "cert_email" {
   description = "Email address for Let's Encrypt certificate notifications"
   type        = string

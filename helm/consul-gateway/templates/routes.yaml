@@ -71,6 +71,8 @@ metadata:
 spec:
   hostnames:
     - {{ .Values.routes.frontend.hostname }}
+    - {{ .Values.routes.backend.hostname }}
+    - {{ .Values.gateway.https.hostname }}
   parentRefs:
     - name: {{ $.Values.gateway.name }}
       namespace: {{ $.Values.global.namespace }}

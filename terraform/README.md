@@ -35,7 +35,9 @@
 | Name | Type |
 |------|------|
 | [google_dns_record_set.api_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
+| [google_dns_record_set.backend](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [google_dns_record_set.consul_ui](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
+| [google_dns_record_set.frontend](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [google_client_config.current](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config) | data source |
 | [google_compute_zones.available](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_zones) | data source |
@@ -47,7 +49,6 @@
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_authorized_networks"></a> [additional\_authorized\_networks](#input\_additional\_authorized\_networks) | CIDR blocks for GKE master authorized networks. When empty (default), current IP is auto-detected. When specified, ONLY these networks are used (mutually exclusive with auto-detection). | <pre>list(object({<br/>    cidr_block   = string<br/>    display_name = string<br/>  }))</pre> | `[]` | no |
-| <a name="input_apigw_prefix"></a> [apigw\_prefix](#input\_apigw\_prefix) | Prefix to append to the DNS zone domain (e.g., 'app' for 'app.example.com') | `string` | `"consul"` | no |
 | <a name="input_backend_enabled"></a> [backend\_enabled](#input\_backend\_enabled) | Enable backend service | `bool` | `true` | no |
 | <a name="input_backend_replicas"></a> [backend\_replicas](#input\_backend\_replicas) | Number of backend replicas | `number` | `2` | no |
 | <a name="input_cert_dns_names"></a> [cert\_dns\_names](#input\_cert\_dns\_names) | DNS names for the certificate (defaults to domain and wildcard) | `list(string)` | `[]` | no |
@@ -96,7 +97,7 @@
 |------|-------------|
 | <a name="output_api_gateway_backend_url"></a> [api\_gateway\_backend\_url](#output\_api\_gateway\_backend\_url) | URL for the sample backend service |
 | <a name="output_api_gateway_frontend_url"></a> [api\_gateway\_frontend\_url](#output\_api\_gateway\_frontend\_url) | URL for the sample frontend service |
-| <a name="output_api_gateway_ip"></a> [api\_gateway\_ip](#output\_api\_gateway\_ip) | External IP of the API Gateway |
+| <a name="output_apigw_lb_address"></a> [apigw\_lb\_address](#output\_apigw\_lb\_address) | External IP of the API Gateway |
 | <a name="output_authorized_networks"></a> [authorized\_networks](#output\_authorized\_networks) | Authorized networks configured for GKE master access |
 | <a name="output_cert_manager_namespace"></a> [cert\_manager\_namespace](#output\_cert\_manager\_namespace) | Kubernetes namespace where cert-manager is deployed |
 | <a name="output_cert_manager_release_name"></a> [cert\_manager\_release\_name](#output\_cert\_manager\_release\_name) | Helm release name for cert-manager |
@@ -107,9 +108,9 @@
 | <a name="output_consul_chart_version"></a> [consul\_chart\_version](#output\_consul\_chart\_version) | Consul Helm chart version |
 | <a name="output_consul_datacenter"></a> [consul\_datacenter](#output\_consul\_datacenter) | Consul datacenter name |
 | <a name="output_consul_fqdn"></a> [consul\_fqdn](#output\_consul\_fqdn) | FQDN for the API Gateway (Root) |
+| <a name="output_consul_lb_address"></a> [consul\_lb\_address](#output\_consul\_lb\_address) | External IP of the Consul UI |
 | <a name="output_consul_namespace"></a> [consul\_namespace](#output\_consul\_namespace) | Kubernetes namespace where Consul is deployed |
 | <a name="output_consul_release_name"></a> [consul\_release\_name](#output\_consul\_release\_name) | Helm release name for Consul |
-| <a name="output_consul_ui_ip"></a> [consul\_ui\_ip](#output\_consul\_ui\_ip) | External IP of the Consul UI |
 | <a name="output_consul_ui_url"></a> [consul\_ui\_url](#output\_consul\_ui\_url) | FQDN for the Consul UI |
 | <a name="output_dns_zone_dns_name"></a> [dns\_zone\_dns\_name](#output\_dns\_zone\_dns\_name) | Cloud DNS managed zone DNS name |
 | <a name="output_dns_zone_name"></a> [dns\_zone\_name](#output\_dns\_zone\_name) | Cloud DNS managed zone name |

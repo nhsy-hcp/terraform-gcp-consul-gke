@@ -18,7 +18,7 @@ output "datacenter" {
   value       = var.datacenter
 }
 
-output "consul_ui_ip" {
+output "consul_lb_address" {
   description = "External IP of the Consul UI service"
   value       = data.kubernetes_service_v1.consul_ui.status[0].load_balancer[0].ingress[0].ip
 }

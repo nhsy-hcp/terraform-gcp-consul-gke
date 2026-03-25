@@ -57,6 +57,16 @@ variable "apigw_fqdn" {
   type        = string
 }
 
+variable "frontend_fqdn" {
+  description = "Fully Qualified Domain Name for the Frontend service"
+  type        = string
+}
+
+variable "backend_fqdn" {
+  description = "Fully Qualified Domain Name for the Backend service"
+  type        = string
+}
+
 variable "project_id" {
   description = "GCP project ID"
   type        = string

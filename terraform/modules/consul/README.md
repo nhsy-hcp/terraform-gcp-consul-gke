@@ -50,7 +50,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_chart_version"></a> [chart\_version](#output\_chart\_version) | Consul Helm chart version |
-| <a name="output_consul_ui_ip"></a> [consul\_ui\_ip](#output\_consul\_ui\_ip) | External IP of the Consul UI service |
+| <a name="output_consul_lb_address"></a> [consul\_lb\_address](#output\_consul\_lb\_address) | External IP of the Consul UI service |
 | <a name="output_datacenter"></a> [datacenter](#output\_datacenter) | Consul datacenter name |
 | <a name="output_namespace"></a> [namespace](#output\_namespace) | Kubernetes namespace where Consul is deployed |
 | <a name="output_release_name"></a> [release\_name](#output\_release\_name) | Helm release name for Consul |

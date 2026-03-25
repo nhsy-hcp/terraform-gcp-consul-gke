@@ -31,6 +31,7 @@ No modules.
 | <a name="input_allowed_cidrs"></a> [allowed\_cidrs](#input\_allowed\_cidrs) | List of CIDR blocks allowed to access external LoadBalancers | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
 | <a name="input_apigw_fqdn"></a> [apigw\_fqdn](#input\_apigw\_fqdn) | Fully Qualified Domain Name for the API Gateway | `string` | n/a | yes |
 | <a name="input_backend_enabled"></a> [backend\_enabled](#input\_backend\_enabled) | Enable backend service | `bool` | `true` | no |
+| <a name="input_backend_fqdn"></a> [backend\_fqdn](#input\_backend\_fqdn) | Fully Qualified Domain Name for the Backend service | `string` | n/a | yes |
 | <a name="input_backend_replicas"></a> [backend\_replicas](#input\_backend\_replicas) | Number of backend replicas | `number` | `2` | no |
 | <a name="input_cert_dns_names"></a> [cert\_dns\_names](#input\_cert\_dns\_names) | DNS names for the certificate | `list(string)` | `[]` | no |
 | <a name="input_cert_email"></a> [cert\_email](#input\_cert\_email) | Email address for Let's Encrypt certificate notifications | `string` | n/a | yes |
@@ -39,6 +40,7 @@ No modules.
 | <a name="input_deploy_gateway"></a> [deploy\_gateway](#input\_deploy\_gateway) | Deploy API Gateway with TLS | `bool` | `true` | no |
 | <a name="input_deploy_services"></a> [deploy\_services](#input\_deploy\_services) | Deploy sample services (backend and frontend) | `bool` | `true` | no |
 | <a name="input_frontend_enabled"></a> [frontend\_enabled](#input\_frontend\_enabled) | Enable frontend service | `bool` | `true` | no |
+| <a name="input_frontend_fqdn"></a> [frontend\_fqdn](#input\_frontend\_fqdn) | Fully Qualified Domain Name for the Frontend service | `string` | n/a | yes |
 | <a name="input_frontend_replicas"></a> [frontend\_replicas](#input\_frontend\_replicas) | Number of frontend replicas | `number` | `2` | no |
 | <a name="input_gateway_namespace"></a> [gateway\_namespace](#input\_gateway\_namespace) | Kubernetes namespace for API Gateway | `string` | `"consul"` | no |
 | <a name="input_intentions_enabled"></a> [intentions\_enabled](#input\_intentions\_enabled) | Enable service intentions | `bool` | `true` | no |
@@ -50,7 +52,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_api_gateway_ip"></a> [api\_gateway\_ip](#output\_api\_gateway\_ip) | External IP of the API Gateway service |
+| <a name="output_apigw_lb_address"></a> [apigw\_lb\_address](#output\_apigw\_lb\_address) | External IP of the API Gateway service |
 | <a name="output_gateway_namespace"></a> [gateway\_namespace](#output\_gateway\_namespace) | Kubernetes namespace for gateway |
 | <a name="output_gateway_release_name"></a> [gateway\_release\_name](#output\_gateway\_release\_name) | Helm release name for consul-gateway |
 | <a name="output_services_namespace"></a> [services\_namespace](#output\_services\_namespace) | Kubernetes namespace for services |
