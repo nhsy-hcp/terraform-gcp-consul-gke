@@ -57,38 +57,6 @@ spec:
           port: {{ .Values.routes.backend.service.port }}
 {{- end }}
 
-{{- if .Values.routes.redirect.enabled }}
----
-# HTTP to HTTPS redirect
-apiVersion: gateway.networking.k8s.io/v1beta1
-kind: HTTPRoute
-metadata:
-  name: {{ .Values.routes.redirect.name }}
-  namespace: {{ $.Values.global.namespace }}
-  labels:
-    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
-    release: {{ $.Release.Name }}
-spec:
-  hostnames:
-    - {{ .Values.routes.frontend.hostname | quote }}
-    - {{ .Values.routes.backend.hostname | quote }}
-  parentRefs:
-    - name: {{ $.Values.gateway.name }}
-      namespace: {{ $.Values.global.namespace }}
-      sectionName: http
-  rules:
-    - filters:
-        - type: RequestRedirect
-          requestRedirect:
-            scheme: https
-            statusCode: {{ .Values.routes.redirect.statusCode }}
-      backendRefs:
-        - kind: Service
-          name: {{ .Values.routes.frontend.service.name }}
-          port: {{ .Values.routes.frontend.service.port }}
-          namespace: {{ .Values.routes.frontend.namespace }}
-{{- end }}
-
 {{- if .Values.referenceGrant.enabled }}
 ---
 # ReferenceGrant to allow Gateway in consul namespace to route to services in default namespace

@@ -16,16 +16,6 @@ metadata:
 spec:
   gatewayClassName: {{ .Values.gateway.gatewayClassName }}
   listeners:
-    {{- if .Values.gateway.http.enabled }}
-    # HTTP listener
-    - name: http
-      protocol: HTTP
-      port: {{ .Values.gateway.http.port }}
-      allowedRoutes:
-        namespaces:
-          from: All
-    {{- end }}
-
     {{- if .Values.gateway.https.enabled }}
     # HTTPS listener (TLS terminated here)
     - name: https

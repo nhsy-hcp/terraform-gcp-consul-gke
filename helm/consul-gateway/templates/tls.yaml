@@ -55,8 +55,13 @@ spec:
   renewBefore: {{ .Values.tls.certificate.renewBefore }}
   isCA: false
   privateKey:
-    algorithm: RSA
-    size: 2048
+    algorithm: {{ .Values.tls.certificate.privateKey.algorithm }}
+    {{- if eq .Values.tls.certificate.privateKey.algorithm "RSA" }}
+    size: {{ .Values.tls.certificate.privateKey.size }}
+    {{- else if eq .Values.tls.certificate.privateKey.algorithm "ECDSA" }}
+    size: {{ .Values.tls.certificate.privateKey.size }}
+    {{- end }}
+    rotationPolicy: {{ .Values.tls.certificate.privateKey.rotationPolicy }}
   usages:
     - server auth
   dnsNames:

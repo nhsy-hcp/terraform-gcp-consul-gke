@@ -15,16 +15,10 @@ gateway:
   gatewayClassName: consul
   loadBalancerSourceRanges: []
 
-  # HTTP listener (for redirect to HTTPS)
-  http:
-    enabled: false
-    port: 80
-
   # HTTPS listener (TLS termination)
   https:
     enabled: true
     port: 443
-    hostname: app.example.com
     tlsSecretName: api-gateway-tls
     tlsMinVersion: "TLSv1_2"
 
@@ -54,11 +48,7 @@ routes:
       name: backend
       port: 80
 
-  # HTTP to HTTPS redirect
-  redirect:
-    enabled: false
-    name: http-redirect
-    statusCode: 301
+
 
 # ReferenceGrant for cross-namespace routing
 referenceGrant:
@@ -89,8 +79,8 @@ tls:
     enabled: true
     name: api-gateway-cert
     secretName: api-gateway-tls
-    duration: 168h  # 7 days
-    renewBefore: 120h  # 5 days
+    duration: 2160h  # 90 days
+    renewBefore: 720h  # 30 days
     dnsNames:
       - app.example.com
       - "*.app.example.com"
