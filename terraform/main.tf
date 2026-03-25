@@ -134,26 +134,15 @@ resource "google_dns_record_set" "api_gateway" {
   rrdatas      = [module.helm_charts.apigw_lb_address]
 }
 
-# DNS Record for Frontend
-resource "google_dns_record_set" "frontend" {
-  count        = var.deploy_api_gateway && var.deploy_sample_services ? 1 : 0
-  name         = "${local.frontend_fqdn}."
-  type         = "A"
+# Wildcard CNAME for all consul subdomains (frontend, backend, etc.) pointing to API Gateway
+resource "google_dns_record_set" "consul_wildcard" {
+  count        = var.deploy_api_gateway ? 1 : 0
+  name         = "*.consul-${local.suffix}.${local.domain}."
+  type         = "CNAME"
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.main.name
   project      = var.project_id
-  rrdatas      = [module.helm_charts.apigw_lb_address]
-}
-
-# DNS Record for Backend
-resource "google_dns_record_set" "backend" {
-  count        = var.deploy_api_gateway && var.deploy_sample_services ? 1 : 0
-  name         = "${local.backend_fqdn}."
-  type         = "A"
-  ttl          = 300
-  managed_zone = data.google_dns_managed_zone.main.name
-  project      = var.project_id
-  rrdatas      = [module.helm_charts.apigw_lb_address]
+  rrdatas      = ["${local.apigw_fqdn}."]
 }
 
 # DNS Record for Consul

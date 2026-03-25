@@ -71,6 +71,9 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 | | `task consul:port-forward` | Port-forward Consul UI to localhost:8501 |
 | | `task gateway:get-ip` | Get API Gateway external IP |
 | | `task gateway:test` | Test API Gateway endpoints |
+| **UI Operations** | `task ui` | Open frontend, backend, and Consul UI in browser |
+| | `task ui:consul` | Open Consul UI only |
+| | `task ui:gateway` | Open API Gateway URL |
 | **Logs** | `task consul:logs` | Show Consul server logs |
 | | `task cert-manager:logs` | Show cert-manager logs |
 | **Cleanup** | `task destroy` | Destroy all Terraform-managed infrastructure |
