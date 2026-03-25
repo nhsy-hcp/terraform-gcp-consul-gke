@@ -16,7 +16,7 @@ spec:
       namespace: {{ $.Values.global.namespace }}
       sectionName: https
   hostnames:
-    - {{ .Values.routes.frontend.hostname }}
+    - {{ .Values.routes.frontend.hostname | quote }}
   rules:
     - matches:
         - path:
@@ -45,7 +45,7 @@ spec:
       namespace: {{ $.Values.global.namespace }}
       sectionName: https
   hostnames:
-    - {{ .Values.routes.backend.hostname }}
+    - {{ .Values.routes.backend.hostname | quote }}
   rules:
     - matches:
         - path:
@@ -70,9 +70,11 @@ metadata:
     release: {{ $.Release.Name }}
 spec:
   hostnames:
-    - {{ .Values.routes.frontend.hostname }}
-    - {{ .Values.routes.backend.hostname }}
-    - {{ .Values.gateway.https.hostname }}
+    - {{ .Values.routes.frontend.hostname | quote }}
+    - {{ .Values.routes.backend.hostname | quote }}
+    {{- if .Values.gateway.https.hostname }}
+    - {{ .Values.gateway.https.hostname | quote }}
+    {{- end }}
   parentRefs:
     - name: {{ $.Values.gateway.name }}
       namespace: {{ $.Values.global.namespace }}

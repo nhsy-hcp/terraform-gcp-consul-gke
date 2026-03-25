@@ -31,7 +31,9 @@ spec:
     - name: https
       protocol: HTTPS
       port: {{ .Values.gateway.https.port }}
-      hostname: {{ .Values.gateway.https.hostname }}
+      {{- if .Values.gateway.https.hostname }}
+      hostname: {{ .Values.gateway.https.hostname | quote }}
+      {{- end }}
       allowedRoutes:
         namespaces:
           from: All
