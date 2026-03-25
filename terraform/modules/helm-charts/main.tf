@@ -91,7 +91,7 @@ resource "helm_release" "consul_gateway" {
       }
     ],
     [
-      for idx, dns_name in(length(var.cert_dns_names) > 0 ? var.cert_dns_names : [var.apigw_fqdn, var.frontend_fqdn, var.backend_fqdn, "*.consul-${split("-", split(".", var.apigw_fqdn)[1])[1]}.${join(".", slice(split(".", var.apigw_fqdn), 2, length(split(".", var.apigw_fqdn))))}"]) : {
+      for idx, dns_name in var.cert_dns_names : {
         name  = "tls.certificate.dnsNames[${idx}]"
         value = dns_name
       }

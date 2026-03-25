@@ -224,12 +224,6 @@ variable "use_production_issuer" {
   default     = false
 }
 
-variable "cert_dns_names" {
-  description = "DNS names for the certificate (defaults to domain and wildcard)"
-  type        = list(string)
-  default     = []
-}
-
 # ============================================================================
 # Sample Services Configuration
 # ============================================================================

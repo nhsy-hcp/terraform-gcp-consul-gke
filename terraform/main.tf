@@ -114,7 +114,7 @@ module "helm_charts" {
   project_id             = var.project_id
   cert_email             = var.cert_email
   use_production_issuer  = var.use_production_issuer
-  cert_dns_names         = var.cert_dns_names
+  cert_dns_names         = ["*.${local.consul_fqdn}", local.consul_fqdn, local.apigw_fqdn]
   consul_namespace       = module.consul.namespace
   cert_manager_namespace = module.cert_manager.namespace
   allowed_cidrs          = local.allowed_cidrs
@@ -155,9 +155,9 @@ resource "google_dns_record_set" "backend" {
   rrdatas      = [module.helm_charts.apigw_lb_address]
 }
 
-# DNS Record for Consul UI
-resource "google_dns_record_set" "consul_ui" {
-  name         = "consul-${local.suffix}.${local.domain}."
+# DNS Record for Consul
+resource "google_dns_record_set" "consul" {
+  name         = "${local.consul_fqdn}."
   type         = "A"
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.main.name
