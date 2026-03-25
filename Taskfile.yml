@@ -67,9 +67,9 @@ tasks:
       - terraform refresh
       - echo "✓ Terraform state refreshed"
 
-  #------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------
   # Deployment Workflows
-  #------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------
 
   confirm:
     prompt: "Continue with the next step?"
@@ -218,13 +218,28 @@ tasks:
     desc: Get API Gateway external IP
     cmds:
       - |
-        echo "API Gateway External IP:"
-        kubectl get svc -n {{.CONSUL_NAMESPACE}} \
-          -l component=api-gateway \
-          -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
-        echo ""
+        GATEWAY_SVC=$(kubectl get svc -n {{.CONSUL_NAMESPACE}} -l component=api-gateway -o name | head -n 1 || true)
+        if [ -z "$GATEWAY_SVC" ]; then
+          echo "Error: API Gateway service not found in namespace {{.CONSUL_NAMESPACE}}."
+          echo "Please run 'task deploy:gateway' first."
+          exit 1
+        fi
 
-  gateway:test:
+        GATEWAY_IP=$(kubectl get "$GATEWAY_SVC" -n {{.CONSUL_NAMESPACE}} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || true)
+        if [ -z "$GATEWAY_IP" ]; then
+          echo "Waiting for external IP assignment for $GATEWAY_SVC..."
+          echo "This may take a few minutes."
+        else
+          echo "API Gateway External IP for $GATEWAY_SVC: $GATEWAY_IP"
+        fi
+    silent: true
+
+  test:
+    desc: Run all tests
+    cmds:
+      - task: test:gateway
+
+  test:gateway:
     desc: Test API Gateway endpoints
     cmds:
       - bash scripts/test-gateway.sh {{.CONSUL_NAMESPACE}}
@@ -341,7 +356,8 @@ tasks:
            task consul:port-forward
 
         4. Test Deployment:
-           task gateway:test
+           task test
+           task test:gateway
 
         5. View Logs:
            task consul:logs

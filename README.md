@@ -231,8 +231,9 @@ task deploy:gateway   # Manually deploy/update only gateway
 
 # Operations
 task status           # Show status of all components
-task gateway:get-ip   # Get API Gateway external IP
-task gateway:test     # Test gateway endpoints
+task gateway:ip       # Get API Gateway external IP
+task test             # Run all tests
+task test:gateway     # Test gateway endpoints
 
 # Consul operations
 task consul:get-token      # Get bootstrap ACL token
