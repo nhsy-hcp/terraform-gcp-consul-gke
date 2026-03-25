@@ -71,3 +71,4 @@ service-account*.json
 /.gemini/
 /conductor/
 /.gemini/
+/terraform/.terraform/
