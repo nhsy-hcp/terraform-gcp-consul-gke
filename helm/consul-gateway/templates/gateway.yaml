@@ -8,6 +8,11 @@ metadata:
   labels:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     release: {{ .Release.Name }}
+  annotations:
+    {{- if .Values.gateway.loadBalancerSourceRanges }}
+    # Restrict external LoadBalancer access
+    api-gateway.consul.hashicorp.com/service_load_balancer_source_ranges: {{ .Values.gateway.loadBalancerSourceRanges | toJson }}
+    {{- end }}
 spec:
   gatewayClassName: {{ .Values.gateway.gatewayClassName }}
   listeners:

@@ -27,26 +27,20 @@ resource "helm_release" "consul" {
   chart      = "consul"
   version    = var.chart_version
   namespace  = kubernetes_namespace_v1.consul.metadata[0].name
+  skip_crds  = var.skip_crds
 
   values = [
     templatefile("${path.module}/../../templates/consul-values.yaml.tpl", {
-      datacenter               = var.datacenter
-      replicas                 = var.server_replicas
-      bootstrap_expect         = var.server_replicas
-      storage_size             = var.storage_size
-      storage_class            = var.storage_class
-      enable_tls               = var.tls_enabled
-      enable_acls              = var.acls_enabled
-      enable_prometheus        = var.enable_prometheus
-      enable_cni               = var.enable_cni
-      enable_ui                = var.enable_ui
-      ui_service_type          = var.ui_service_type
-      enable_transparent_proxy = var.enable_transparent_proxy
-      enable_controller        = var.enable_controller
-      api_gateway_service_type = "LoadBalancer" # Hardcode or add to variables
-      enable_gke_autopilot     = var.enable_gke_autopilot
-      gcp_project_id           = var.project_id
-      server_iam_sa            = google_service_account.consul_server.email
+      datacenter       = var.datacenter
+      replicas         = var.server_replicas
+      bootstrap_expect = var.server_replicas
+      storage_size     = var.storage_size
+      storage_class    = var.storage_class
+      enable_tls       = var.tls_enabled
+      enable_acls      = var.acls_enabled
+      server_iam_sa    = google_service_account.consul_server.email
+      manage_crds      = !var.skip_crds
+      allowed_cidrs    = jsonencode(var.allowed_cidrs)
     })
   ]
 

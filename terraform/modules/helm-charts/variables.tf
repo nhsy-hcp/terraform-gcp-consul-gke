@@ -88,3 +88,9 @@ variable "cert_manager_namespace" {
   description = "cert-manager namespace dependency"
   type        = string
 }
+
+variable "allowed_cidrs" {
+  description = "List of CIDR blocks allowed to access external LoadBalancers"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}

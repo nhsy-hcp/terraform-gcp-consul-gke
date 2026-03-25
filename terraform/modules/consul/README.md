@@ -31,23 +31,18 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acls_enabled"></a> [acls\_enabled](#input\_acls\_enabled) | Enable ACLs for Consul | `bool` | `true` | no |
+| <a name="input_allowed_cidrs"></a> [allowed\_cidrs](#input\_allowed\_cidrs) | List of CIDR blocks allowed to access external LoadBalancers | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Consul Helm chart version | `string` | `"1.9.5"` | no |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the GKE cluster | `string` | n/a | yes |
 | <a name="input_datacenter"></a> [datacenter](#input\_datacenter) | Consul datacenter name | `string` | `"dc1"` | no |
-| <a name="input_enable_cni"></a> [enable\_cni](#input\_enable\_cni) | Enable CNI for transparent proxy | `bool` | `true` | no |
-| <a name="input_enable_controller"></a> [enable\_controller](#input\_enable\_controller) | Enable Consul controller for CRD management | `bool` | `true` | no |
-| <a name="input_enable_gke_autopilot"></a> [enable\_gke\_autopilot](#input\_enable\_gke\_autopilot) | Enable Consul Autopilot mode (for GKE Autopilot) | `bool` | `false` | no |
-| <a name="input_enable_prometheus"></a> [enable\_prometheus](#input\_enable\_prometheus) | Deploy a Prometheus instance for monitoring | `bool` | `true` | no |
-| <a name="input_enable_transparent_proxy"></a> [enable\_transparent\_proxy](#input\_enable\_transparent\_proxy) | Enable transparent proxy for service mesh | `bool` | `true` | no |
-| <a name="input_enable_ui"></a> [enable\_ui](#input\_enable\_ui) | Enable Consul UI | `bool` | `true` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace for Consul | `string` | `"consul"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID | `string` | n/a | yes |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Helm release name for Consul | `string` | `"consul"` | no |
 | <a name="input_server_replicas"></a> [server\_replicas](#input\_server\_replicas) | Number of Consul server replicas | `number` | `3` | no |
+| <a name="input_skip_crds"></a> [skip\_crds](#input\_skip\_crds) | Skip installation of CRDs by Helm | `bool` | `true` | no |
 | <a name="input_storage_class"></a> [storage\_class](#input\_storage\_class) | Storage class for Consul persistent volumes | `string` | `"standard-rwo"` | no |
 | <a name="input_storage_size"></a> [storage\_size](#input\_storage\_size) | Storage size for Consul persistent volumes | `string` | `"10Gi"` | no |
 | <a name="input_tls_enabled"></a> [tls\_enabled](#input\_tls\_enabled) | Enable TLS for Consul | `bool` | `true` | no |
-| <a name="input_ui_service_type"></a> [ui\_service\_type](#input\_ui\_service\_type) | Kubernetes service type for Consul UI | `string` | `"LoadBalancer"` | no |
 
 ## Outputs
 

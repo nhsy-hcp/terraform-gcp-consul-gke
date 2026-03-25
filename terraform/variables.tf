@@ -20,7 +20,7 @@ variable "region" {
 variable "cluster_name" {
   description = "Name of the GKE cluster"
   type        = string
-  default     = "consul-mesh"
+  default     = "consul"
 }
 
 variable "num_zones" {
@@ -78,13 +78,13 @@ variable "master_ipv4_cidr_block" {
 variable "network_name" {
   description = "Name of the VPC network to create"
   type        = string
-  default     = "consul-gke-network"
+  default     = "net"
 }
 
 variable "subnet_name" {
   description = "Name of the subnet to create"
   type        = string
-  default     = "consul-gke-subnet"
+  default     = "snet"
 }
 
 variable "subnet_cidr" {
@@ -164,48 +164,6 @@ variable "consul_storage_size" {
   default     = "10Gi"
 }
 
-variable "enable_gke_autopilot" {
-  description = "Enable Consul Autopilot mode (for GKE Autopilot)"
-  type        = bool
-  default     = false
-}
-
-variable "consul_enable_cni" {
-  description = "Enable CNI plugin for transparent proxy"
-  type        = bool
-  default     = true
-}
-
-variable "consul_enable_prometheus" {
-  description = "Deploy a Prometheus instance for monitoring"
-  type        = bool
-  default     = true
-}
-
-variable "consul_enable_ui" {
-  description = "Enable Consul UI"
-  type        = bool
-  default     = true
-}
-
-variable "consul_ui_service_type" {
-  description = "Kubernetes service type for Consul UI"
-  type        = string
-  default     = "LoadBalancer"
-}
-
-variable "consul_enable_transparent_proxy" {
-  description = "Enable transparent proxy for service mesh"
-  type        = bool
-  default     = true
-}
-
-variable "consul_enable_controller" {
-  description = "Enable Consul controller for CRD management"
-  type        = bool
-  default     = true
-}
-
 variable "consul_acls_enabled" {
   description = "Enable Consul ACLs"
   type        = bool
@@ -214,6 +172,12 @@ variable "consul_acls_enabled" {
 
 variable "consul_tls_enabled" {
   description = "Enable TLS for Consul"
+  type        = bool
+  default     = true
+}
+
+variable "consul_skip_crds" {
+  description = "Skip installation of CRDs by Helm"
   type        = bool
   default     = true
 }
@@ -252,7 +216,7 @@ variable "dns_zone_name" {
 variable "apigw_prefix" {
   description = "Prefix to append to the DNS zone domain (e.g., 'app' for 'app.example.com')"
   type        = string
-  default     = "app"
+  default     = "consul"
 }
 
 variable "cert_email" {

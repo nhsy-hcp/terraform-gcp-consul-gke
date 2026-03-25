@@ -85,6 +85,12 @@ resource "helm_release" "consul_gateway" {
       }
     ],
     [
+      for idx, cidr in var.allowed_cidrs : {
+        name  = "gateway.loadBalancerSourceRanges[${idx}]"
+        value = cidr
+      }
+    ],
+    [
       for idx, dns_name in(length(var.cert_dns_names) > 0 ? var.cert_dns_names : [var.apigw_fqdn, "*.${var.apigw_fqdn}"]) : {
         name  = "tls.certificate.dnsNames[${idx}]"
         value = dns_name

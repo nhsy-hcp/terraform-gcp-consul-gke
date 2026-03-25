@@ -52,46 +52,16 @@ variable "acls_enabled" {
   default     = true
 }
 
-variable "enable_prometheus" {
-  description = "Deploy a Prometheus instance for monitoring"
+variable "skip_crds" {
+  description = "Skip installation of CRDs by Helm"
   type        = bool
   default     = true
 }
 
-variable "enable_cni" {
-  description = "Enable CNI for transparent proxy"
-  type        = bool
-  default     = true
-}
-
-variable "enable_ui" {
-  description = "Enable Consul UI"
-  type        = bool
-  default     = true
-}
-
-variable "ui_service_type" {
-  description = "Kubernetes service type for Consul UI"
-  type        = string
-  default     = "LoadBalancer"
-}
-
-variable "enable_transparent_proxy" {
-  description = "Enable transparent proxy for service mesh"
-  type        = bool
-  default     = true
-}
-
-variable "enable_controller" {
-  description = "Enable Consul controller for CRD management"
-  type        = bool
-  default     = true
-}
-
-variable "enable_gke_autopilot" {
-  description = "Enable Consul Autopilot mode (for GKE Autopilot)"
-  type        = bool
-  default     = false
+variable "allowed_cidrs" {
+  description = "List of CIDR blocks allowed to access external LoadBalancers"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
 variable "project_id" {

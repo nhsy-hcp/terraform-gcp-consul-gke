@@ -35,7 +35,7 @@ cert_email = "admin@example.com"
 # consul_datacenter      = "dc1"
 # consul_server_replicas = 3
 # consul_storage_size    = "10Gi"
-# enable_gke_autopilot   = false
+# consul_skip_crds       = true
 
 # ============================================================================
 # Optional: DNS and TLS Configuration

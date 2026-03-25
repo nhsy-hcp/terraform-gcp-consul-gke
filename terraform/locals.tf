@@ -9,11 +9,17 @@ locals {
 }
 
 locals {
+  # Refactored IP lookup logic
+  my_ip_cidr = length(data.http.my_ip) > 0 ? "${chomp(data.http.my_ip[0].response_body)}/32" : null
+
   # Use current IP if no custom networks provided, otherwise use custom networks
   authorized_networks = length(var.additional_authorized_networks) == 0 ? [
     {
-      cidr_block   = "${chomp(data.http.my_ip[0].response_body)}/32"
+      cidr_block   = local.my_ip_cidr
       display_name = "Current IP (auto-detected)"
     }
   ] : var.additional_authorized_networks
+
+  # List of CIDRs for restricting external LoadBalancers
+  allowed_cidrs = [for net in local.authorized_networks : net.cidr_block]
 }

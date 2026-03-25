@@ -12,13 +12,13 @@ variable "region" {
 variable "network_name" {
   description = "Name of the VPC network"
   type        = string
-  default     = "consul-gke-network"
+  default     = "net"
 }
 
 variable "subnet_name" {
   description = "Name of the subnet"
   type        = string
-  default     = "consul-gke-subnet"
+  default     = "snet"
 }
 
 variable "subnet_cidr" {

@@ -67,23 +67,18 @@ data "http" "my_ip" {
 module "consul" {
   source = "./modules/consul"
 
-  project_id               = var.project_id
-  cluster_name             = module.gke.cluster_name
-  namespace                = var.consul_namespace
-  chart_version            = var.consul_chart_version
-  datacenter               = var.consul_datacenter
-  server_replicas          = var.consul_server_replicas
-  storage_class            = var.consul_storage_class
-  storage_size             = var.consul_storage_size
-  enable_gke_autopilot     = var.enable_gke_autopilot
-  enable_cni               = var.consul_enable_cni
-  enable_prometheus        = var.consul_enable_prometheus
-  enable_ui                = var.consul_enable_ui
-  ui_service_type          = var.consul_ui_service_type
-  enable_transparent_proxy = var.consul_enable_transparent_proxy
-  enable_controller        = var.consul_enable_controller
-  acls_enabled             = var.consul_acls_enabled
-  tls_enabled              = var.consul_tls_enabled
+  project_id      = var.project_id
+  cluster_name    = module.gke.cluster_name
+  namespace       = var.consul_namespace
+  chart_version   = var.consul_chart_version
+  datacenter      = var.consul_datacenter
+  server_replicas = var.consul_server_replicas
+  storage_class   = var.consul_storage_class
+  storage_size    = var.consul_storage_size
+  acls_enabled    = var.consul_acls_enabled
+  tls_enabled     = var.consul_tls_enabled
+  skip_crds       = var.consul_skip_crds
+  allowed_cidrs   = local.allowed_cidrs
 
   depends_on = [module.gke.primary_nodes_id]
 }
@@ -120,6 +115,7 @@ module "helm_charts" {
   cert_dns_names         = var.cert_dns_names
   consul_namespace       = module.consul.namespace
   cert_manager_namespace = module.cert_manager.namespace
+  allowed_cidrs          = local.allowed_cidrs
 
   depends_on = [module.consul, module.cert_manager]
 }

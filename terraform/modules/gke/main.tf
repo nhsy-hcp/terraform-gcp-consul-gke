@@ -72,10 +72,10 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Enable Gateway API
-  gateway_api_config {
-    channel = "CHANNEL_STANDARD"
-  }
+  # # Enable Gateway API
+  # gateway_api_config {
+  #   channel = "CHANNEL_STANDARD"
+  # }
 
   # Enable Private Cluster
   private_cluster_config {

@@ -13,6 +13,7 @@ gateway:
   enabled: true
   name: api-gateway
   gatewayClassName: consul
+  loadBalancerSourceRanges: []
 
   # HTTP listener (for redirect to HTTPS)
   http:
