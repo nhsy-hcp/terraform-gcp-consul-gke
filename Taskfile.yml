@@ -79,6 +79,7 @@ tasks:
   apply:
     deps: [init]
     desc: "Staged deployment (prereqs → gke → consul → cert-manager → helm-charts with confirmations, use -- --yes to skip)"
+    silent: true
     cmds:
       - task: validate
       - task: apply:prereqs
@@ -138,6 +139,7 @@ tasks:
 
   validate:gateway-crds:
     desc: Verify Gateway API CRDs are installed
+    silent: true
     cmds:
       - |
         echo "Checking for required Gateway API CRDs..."
@@ -168,40 +170,50 @@ tasks:
       - terraform:check-vars
       - validate:gateway-crds
     cmds:
-      - task: apply:helm-charts:services
       - task: apply:helm-charts:gateway
+      - task: apply:helm-charts:services
       - task: apply:helm-charts:verify
 
-  apply:helm-charts:services:
-    desc: Deploy backend and frontend services first
+  apply:helm-charts:gateway:
+    desc: Deploy API Gateway with TLS certificate
     internal: true
+    silent: true
     dir: terraform
     cmds:
-      - echo "Deploying consul-services (backend/frontend)..."
+      - echo "Deploying API Gateway and TLS certificate..."
+      - terraform apply -target=module.helm_charts.helm_release.consul_gateway -auto-approve
+      - echo "Waiting for TLS certificate to be ready..."
+      - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout=300s
+      - echo "✓ Gateway and TLS certificate deployed"
+
+  apply:helm-charts:services:
+    desc: Deploy services with HTTPRoutes
+    internal: true
+    silent: true
+    dir: terraform
+    cmds:
+      - echo "Deploying services and HTTPRoutes..."
       - terraform apply -target=module.helm_charts.helm_release.consul_services -auto-approve
-      - echo "Waiting for services to be ready..."
+      - echo "Waiting for service pods to be ready..."
       - kubectl wait --for=condition=ready pod -l app=backend -n default --timeout=120s || true
       - kubectl wait --for=condition=ready pod -l app=frontend -n default --timeout=120s || true
-      - echo "✓ Services deployed and ready"
-
-  apply:helm-charts:gateway:
-    desc: Deploy API Gateway with TLS
-    internal: true
-    dir: terraform
-    cmds:
-      - echo "Deploying consul-gateway (API Gateway + Certificate)..."
-      - terraform apply -target=module.helm_charts.helm_release.consul_gateway -auto-approve
-      - echo "✓ Gateway resources deployed"
+      - echo "✓ Services and routes deployed"
 
   apply:helm-charts:verify:
-    desc: Verify Gateway deployment and wait for LB IP
+    desc: Verify complete deployment and connectivity
     internal: true
+    silent: true
+    dir: terraform
     cmds:
-      - echo "Waiting for Gateway LoadBalancer IP assignment..."
-      - bash scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 120
-      - echo "Verifying TLS certificate status..."
+      - echo "Finalizing deployment..."
+      - terraform apply -auto-approve
+      - echo "Waiting for LoadBalancer IP assignment..."
+      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 120
+      - echo "Verifying HTTPRoutes..."
+      - kubectl get httproute -n default -o wide
+      - echo "Running comprehensive TLS verification..."
       - task: verify:gateway-tls
-      - echo "✓ Gateway deployment verified"
+      - echo "✓ Deployment complete and verified"
 
   destroy:
     desc: Destroy all Terraform-managed infrastructure
@@ -219,6 +231,7 @@ tasks:
 
   gke:credentials:
     desc: Get GKE cluster credentials
+    silent: true
     dir: terraform
     vars:
       CLUSTER_NAME:
@@ -234,6 +247,7 @@ tasks:
 
   deploy:services:
     desc: Deploy sample backend and frontend services via Helm
+    silent: true
     cmds:
       - helm upgrade --install consul-services ./helm/consul-services --namespace default --create-namespace
       - echo "✓ Services deployed via Helm"
@@ -363,6 +377,7 @@ tasks:
   recreate:certificate:
     desc: Force recreation of API Gateway TLS certificate
     prompt: "This will delete the certificate and trigger a new issuance. Continue?"
+    silent: true
     dir: terraform
     cmds:
       - echo "Deleting existing certificate resources..."

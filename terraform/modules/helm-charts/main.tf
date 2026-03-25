@@ -27,10 +27,33 @@ resource "helm_release" "consul_services" {
     {
       name  = "intentions.enabled"
       value = var.intentions_enabled
+    },
+    {
+      name  = "routes.enabled"
+      value = var.deploy_gateway
+    },
+    {
+      name  = "routes.gateway.name"
+      value = "api-gateway"
+    },
+    {
+      name  = "routes.gateway.namespace"
+      value = var.gateway_namespace
+    },
+    {
+      name  = "routes.frontend.hostname"
+      value = var.frontend_fqdn
+    },
+    {
+      name  = "routes.backend.hostname"
+      value = var.backend_fqdn
     }
   ]
 
-  depends_on = [var.consul_namespace]
+  depends_on = [
+    var.consul_namespace,
+    helm_release.consul_gateway
+  ]
 }
 
 # Deploy consul-gateway Helm chart
@@ -57,14 +80,6 @@ resource "helm_release" "consul_gateway" {
       {
         name  = "gateway.https.hostname"
         value = "*.${var.consul_fqdn}"
-      },
-      {
-        name  = "routes.frontend.hostname"
-        value = var.frontend_fqdn
-      },
-      {
-        name  = "routes.backend.hostname"
-        value = var.backend_fqdn
       },
       {
         name  = "tls.clusterIssuer.staging.enabled"

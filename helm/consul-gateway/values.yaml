@@ -22,33 +22,6 @@ gateway:
     tlsSecretName: api-gateway-tls
     tlsMinVersion: "TLSv1_2"
 
-# HTTP Routes configuration
-routes:
-  enabled: true
-
-  # Frontend route
-  frontend:
-    enabled: true
-    name: frontend-route
-    namespace: default
-    hostname: app.example.com
-    path: /
-    service:
-      name: frontend
-      port: 80
-
-  # Backend route
-  backend:
-    enabled: true
-    name: backend-route
-    namespace: default
-    hostname: app.example.com
-    path: /
-    service:
-      name: backend
-      port: 80
-
-
 # ReferenceGrant for cross-namespace routing
 referenceGrant:
   enabled: true

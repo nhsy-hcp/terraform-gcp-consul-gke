@@ -94,3 +94,26 @@ intentions:
       sources:
         - name: api-gateway
           action: allow
+
+# HTTP Routes configuration
+routes:
+  enabled: true
+
+  # Gateway reference
+  gateway:
+    name: api-gateway
+    namespace: consul
+
+  # Frontend route
+  frontend:
+    enabled: true
+    name: frontend-route
+    hostname: app.example.com
+    path: /
+
+  # Backend route
+  backend:
+    enabled: true
+    name: backend-route
+    hostname: app.example.com
+    path: /api
