@@ -23,18 +23,21 @@ if [ -z "$GATEWAY_IP" ]; then
   exit 1
 fi
 
-DOMAIN=$(cd terraform && terraform output -raw dns_zone_dns_name | sed 's/\.$//')
+FRONTEND_FQDN=$(cd terraform && terraform output -raw api_gateway_frontend_url | sed 's|^https://||' | sed 's|/$||')
+BACKEND_FQDN=$(cd terraform && terraform output -raw api_gateway_backend_url | sed 's|^https://||' | sed 's|/$||')
 
-echo "Testing Gateway at: $GATEWAY_IP (Domain: $DOMAIN)"
+echo "Testing Gateway at: $GATEWAY_IP"
+echo "Frontend: $FRONTEND_FQDN"
+echo "Backend:  $BACKEND_FQDN"
 echo ""
 
 echo "Testing HTTP (should redirect to HTTPS):"
-curl -I -H "Host: $DOMAIN" "http://$GATEWAY_IP/"
+curl -I --resolve "$FRONTEND_FQDN:80:$GATEWAY_IP" "http://$FRONTEND_FQDN/"
 echo ""
 
 echo "Testing HTTPS frontend:"
-curl -k -H "Host: $DOMAIN" "https://$GATEWAY_IP/"
+curl -k --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/"
 echo ""
 
 echo "Testing HTTPS backend:"
-curl -k -H "Host: $DOMAIN" "https://$GATEWAY_IP/api"
+curl -k --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/api"
