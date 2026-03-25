@@ -20,7 +20,7 @@ locals {
   authorized_networks = length(var.additional_authorized_networks) == 0 ? [
     {
       cidr_block   = local.mgmt_ip_cidr
-      display_name = "Current IP (auto-detected)"
+      display_name = "mgmt-ip-cidr"
     }
   ] : var.additional_authorized_networks
 
