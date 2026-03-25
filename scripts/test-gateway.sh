@@ -36,7 +36,7 @@ curl -k --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/"
 echo ""
 
 echo "Testing HTTPS backend:"
-curl -k --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/api"
+curl -k --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/"
 echo ""
 
 echo "✅ Gateway tests completed successfully!"

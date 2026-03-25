@@ -43,11 +43,10 @@ routes:
     name: backend-route
     namespace: default
     hostname: app.example.com
-    path: /api
+    path: /
     service:
       name: backend
       port: 80
-
 
 
 # ReferenceGrant for cross-namespace routing

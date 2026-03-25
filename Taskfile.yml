@@ -349,8 +349,10 @@ tasks:
       - echo "✓ Terraform files formatted"
 
   lint:
-    desc: Run linting and validation checks (pre-commit hooks)
+    desc: Run all linting and validation checks
     cmds:
+      - task: lint:terraform
+      - task: lint:helm
       - pre-commit run --all-files
       - echo "✓ All checks passed"
 
@@ -361,6 +363,24 @@ tasks:
       - terraform fmt -check -recursive
       - terraform validate
       - echo "✓ Terraform checks passed"
+
+  lint:helm:
+    desc: Lint all Helm charts
+    cmds:
+      - helm lint helm/consul-gateway
+      - helm lint helm/consul-services
+      - echo "✓ Helm charts validated"
+
+  lint:helm:strict:
+    desc: Strict Helm validation with Kubernetes dry-run
+    deps:
+      - gke:credentials
+    cmds:
+      - echo "Validating consul-gateway chart..."
+      - helm template test helm/consul-gateway | kubectl apply --dry-run=client -f -
+      - echo "Validating consul-services chart..."
+      - helm template test helm/consul-services | kubectl apply --dry-run=client -f -
+      - echo "✓ Helm charts validated against Kubernetes API"
 
   docs:
     desc: Generate Terraform documentation
