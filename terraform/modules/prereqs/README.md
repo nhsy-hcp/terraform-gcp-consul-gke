@@ -4,7 +4,6 @@
 Prerequisites Module
 
 This module sets up the foundational GCP infrastructure:
-
 - Enables required GCP APIs
 - Creates VPC network with subnet
 - Configures Cloud NAT for private GKE nodes
