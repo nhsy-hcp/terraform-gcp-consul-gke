@@ -125,7 +125,6 @@ module "helm_charts" {
 
 # DNS Record for API Gateway (Root Domain)
 resource "google_dns_record_set" "api_gateway" {
-  count        = var.deploy_api_gateway ? 1 : 0
   name         = "${local.apigw_fqdn}."
   type         = "A"
   ttl          = 300
@@ -136,7 +135,6 @@ resource "google_dns_record_set" "api_gateway" {
 
 # Wildcard CNAME for all consul subdomains (frontend, backend, etc.) pointing to API Gateway
 resource "google_dns_record_set" "consul_wildcard" {
-  count        = var.deploy_api_gateway ? 1 : 0
   name         = "*.consul-${local.suffix}.${local.domain}."
   type         = "CNAME"
   ttl          = 300

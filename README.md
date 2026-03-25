@@ -73,12 +73,21 @@ task init
 task apply
 ```
 
-This deploys:
+**Deployment Process:**
 
-- GKE cluster with Workload Identity
-- Consul with service mesh (via Terraform module)
-- cert-manager with DNS-01 solver (via Terraform module)
-- Sample services and API Gateway (via Terraform module)
+The `task apply` command performs a **staged deployment** with automatic validation:
+
+1. **Prerequisites**: VPC, APIs, networking
+2. **GKE Cluster**: Regional cluster with Workload Identity
+3. **Consul Service Mesh**: 3-node HA cluster with Connect
+4. **cert-manager**: Automated TLS certificate management
+5. **Application Helm Charts** (staged):
+   - **Gateway API CRDs**: Auto-installed if missing (HTTPRoute, Gateway, etc.)
+   - **Services**: Backend and frontend deployed first
+   - **API Gateway**: Deployed after services are ready
+   - **Verification**: LoadBalancer IP assignment and TLS certificate validation
+
+Each stage includes confirmation prompts. Use `task apply -- --yes` to skip prompts for CI/CD.
 
 ### 3. Verify Deployment
 
@@ -196,9 +205,11 @@ task apply         # Apply infrastructure changes (staged deployment)
 task destroy       # Destroy all infrastructure
 
 # Operations
-task status           # Show status of all components
-task gateway:ip       # Get API Gateway external IP
-task gateway:test     # Test gateway endpoints
+task status               # Show status of all components
+task gateway:ip           # Get API Gateway external IP
+task gateway:test         # Test gateway endpoints
+task verify:gateway-tls   # Verify API Gateway TLS certificate status
+task recreate:certificate # Force recreation of API Gateway TLS certificate
 
 # Consul operations
 task consul:token         # Get bootstrap ACL token
@@ -239,6 +250,9 @@ task apply
 ### Certificate Issues
 
 ```bash
+# Run comprehensive TLS verification (recommended first step)
+task verify:gateway-tls
+
 # Check certificate status
 kubectl get certificate -n consul
 kubectl describe certificate api-gateway-cert -n consul
@@ -252,7 +266,54 @@ dig TXT _acme-challenge.app.example.com
 
 # Check cert-manager logs
 task cert-manager:logs
+
+# Verify Workload Identity configuration
+task workload-identity:verify
 ```
+
+**Common Certificate Issues:**
+
+1. **DNS-01 Challenge Failures (SERVFAIL)**
+   - Verify Cloud DNS zone exists and is accessible
+   - Check cert-manager service account has `roles/dns.admin` permission
+   - Verify Workload Identity binding: `task workload-identity:verify`
+
+2. **Certificate Not Ready**
+   - Run `task verify:gateway-tls` for detailed diagnostics
+   - Check ClusterIssuer status: `kubectl get clusterissuer`
+   - Review cert-manager logs: `task cert-manager:logs`
+
+3. **Gateway Listener Not Programmed**
+   - Verify TLS secret exists: `kubectl get secret api-gateway-tls -n consul`
+   - Check Gateway status: `kubectl describe gateway api-gateway -n consul`
+   - Certificate must be ready before Gateway listener can be programmed
+
+4. **InvalidCertificateRef Warning (Non-Blocking)**
+   - **Symptom**: Gateway shows `InvalidCertificateRef` with message "certificate is invalid or does not contain a supported server name"
+   - **Cause**: Gateway listener missing hostname field (known limitation)
+   - **Impact**: Warning only - Gateway functions normally, TLS termination works correctly
+   - **Verification**: Certificate SANs include wildcard domain, Gateway accepts all traffic
+   - **Status**: This is a known cosmetic issue and does not affect functionality
+
+**Force Certificate Recreation:**
+
+If the certificate is stuck or has persistent issues, you can force a recreation:
+
+```bash
+# Delete and recreate the certificate (with confirmation prompt)
+task recreate:certificate
+
+# Monitor the new certificate issuance
+task verify:gateway-tls
+
+# Watch cert-manager logs in real-time
+task cert-manager:logs
+```
+
+This will:
+1. Delete the existing Certificate, CertificateRequest, Challenges, and TLS secret
+2. Trigger Terraform to recreate the certificate via the helm-charts module
+3. Start a fresh ACME challenge process
 
 ### Service Mesh Issues
 
@@ -282,6 +343,22 @@ kubectl get httproute -A
 
 # View gateway logs
 kubectl logs -n consul -l component=api-gateway
+
+# Verify Gateway API CRDs are installed
+kubectl get crd | grep gateway.networking.k8s.io
+```
+
+**Gateway API CRDs:**
+
+The deployment automatically installs required Gateway API CRDs (Gateway, HTTPRoute, ReferenceGrant) if they are missing. This is handled by the `validate:gateway-crds` task which runs before helm chart deployment.
+
+If you encounter CRD-related errors:
+```bash
+# Manually verify and install CRDs
+task validate:gateway-crds
+
+# Check installed CRDs
+kubectl get crd | grep gateway
 ```
 
 ## Documentation

@@ -136,16 +136,72 @@ tasks:
     cmds:
       - terraform apply -target=module.cert_manager -auto-approve
 
+  validate:gateway-crds:
+    desc: Verify Gateway API CRDs are installed
+    cmds:
+      - |
+        echo "Checking for required Gateway API CRDs..."
+        MISSING_CRDS=""
+
+        for CRD in gateways.gateway.networking.k8s.io \
+                   gatewayclasses.gateway.networking.k8s.io \
+                   httproutes.gateway.networking.k8s.io \
+                   referencegrants.gateway.networking.k8s.io; do
+          if ! kubectl get crd "$CRD" &>/dev/null; then
+            MISSING_CRDS="$MISSING_CRDS $CRD"
+          fi
+        done
+
+        if [ -n "$MISSING_CRDS" ]; then
+          echo "⚠ Missing required CRDs:$MISSING_CRDS"
+          echo "Installing Gateway API CRDs..."
+          kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
+          echo "✓ Gateway API CRDs installed"
+        else
+          echo "✓ All required Gateway API CRDs present"
+        fi
+
   apply:helm-charts:
-    desc: Stage 5 - Deploy initial application helm charts via Terraform
+    desc: Stage 5 - Deploy application helm charts via Terraform (staged)
     dir: terraform
     deps:
       - terraform:check-vars
+      - validate:gateway-crds
     cmds:
-      - echo "Waiting for API Gateway load balancer IP..."
-      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}}
-      - terraform apply -auto-approve
-    silent: true
+      - task: apply:helm-charts:services
+      - task: apply:helm-charts:gateway
+      - task: apply:helm-charts:verify
+
+  apply:helm-charts:services:
+    desc: Deploy backend and frontend services first
+    internal: true
+    dir: terraform
+    cmds:
+      - echo "Deploying consul-services (backend/frontend)..."
+      - terraform apply -target=module.helm_charts.helm_release.consul_services -auto-approve
+      - echo "Waiting for services to be ready..."
+      - kubectl wait --for=condition=ready pod -l app=backend -n default --timeout=120s || true
+      - kubectl wait --for=condition=ready pod -l app=frontend -n default --timeout=120s || true
+      - echo "✓ Services deployed and ready"
+
+  apply:helm-charts:gateway:
+    desc: Deploy API Gateway with TLS
+    internal: true
+    dir: terraform
+    cmds:
+      - echo "Deploying consul-gateway (API Gateway + Certificate)..."
+      - terraform apply -target=module.helm_charts.helm_release.consul_gateway -auto-approve
+      - echo "✓ Gateway resources deployed"
+
+  apply:helm-charts:verify:
+    desc: Verify Gateway deployment and wait for LB IP
+    internal: true
+    cmds:
+      - echo "Waiting for Gateway LoadBalancer IP assignment..."
+      - bash scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 120
+      - echo "Verifying TLS certificate status..."
+      - task: verify:gateway-tls
+      - echo "✓ Gateway deployment verified"
 
   destroy:
     desc: Destroy all Terraform-managed infrastructure
@@ -299,6 +355,27 @@ tasks:
     cmds:
       - bash scripts/test-gateway.sh {{.CONSUL_NAMESPACE}}
 
+  verify:gateway-tls:
+    desc: Verify API Gateway TLS certificate status and configuration
+    cmds:
+      - bash scripts/verify-gateway-tls.sh {{.CONSUL_NAMESPACE}} {{.CERT_MANAGER_NAMESPACE}}
+
+  recreate:certificate:
+    desc: Force recreation of API Gateway TLS certificate
+    prompt: "This will delete the certificate and trigger a new issuance. Continue?"
+    dir: terraform
+    cmds:
+      - echo "Deleting existing certificate resources..."
+      - kubectl delete certificate api-gateway-cert -n {{.CONSUL_NAMESPACE}} --ignore-not-found=true
+      - kubectl delete certificaterequest -n {{.CONSUL_NAMESPACE}} -l cert-manager.io/certificate-name=api-gateway-cert --ignore-not-found=true
+      - kubectl delete challenges -n {{.CONSUL_NAMESPACE}} --all --ignore-not-found=true
+      - kubectl delete secret api-gateway-tls -n {{.CONSUL_NAMESPACE}} --ignore-not-found=true
+      - echo "Waiting 5 seconds for cleanup..."
+      - sleep 5
+      - echo "Redeploying certificate via Terraform..."
+      - terraform apply -auto-approve
+      - echo "✓ Certificate recreation triggered"
+
   consul:logs:
     desc: Show Consul server logs
     cmds:
@@ -313,11 +390,6 @@ tasks:
     desc: Show cert-manager logs
     cmds:
       - kubectl logs -n {{.CERT_MANAGER_NAMESPACE}} -l app=cert-manager --tail=100 -f
-
-  workload-identity:verify:
-    desc: Verify Workload Identity is configured correctly
-    cmds:
-      - bash scripts/verify-workload-identity.sh {{.CERT_MANAGER_NAMESPACE}}
 
   uninstall:
     desc: Clean up Kubernetes resources (Helm releases and namespaces)
