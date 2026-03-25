@@ -104,7 +104,6 @@ tasks:
         vars:
           CLI_ARGS: '{{.CLI_ARGS}}'
       - task: apply:helm-charts
-      - echo "Initial Helm charts deployed. Review outputs before continuing."
   apply:prereqs:
     desc: Stage 1 - Deploy prerequisites (VPC, APIs, etc)
     dir: terraform
@@ -217,28 +216,32 @@ tasks:
       - kubectl port-forward service/consul-ui --namespace {{.CONSUL_NAMESPACE}} 8501:443
 
   ui:
-    desc: Open Frontend and Backend URLs in browser
+    desc: Open Frontend, Backend, and Consul UI in browser
     dir: terraform
+    silent: true
     cmds:
       - |
         FRONTEND_URL=$(terraform output -raw api_gateway_frontend_url 2>/dev/null || true)
         BACKEND_URL=$(terraform output -raw api_gateway_backend_url 2>/dev/null || true)
+        CONSUL_URL=$(terraform output -raw consul_url 2>/dev/null || true)
 
-        if [ -z "$FRONTEND_URL" ] || [ -z "$BACKEND_URL" ]; then
+        if [ -z "$FRONTEND_URL" ] || [ -z "$BACKEND_URL" ] || [ -z "$CONSUL_URL" ]; then
           echo "Error: Unable to retrieve URLs from Terraform outputs."
           echo "Ensure infrastructure is deployed with 'task apply'."
           exit 1
         fi
 
+        echo "Opening Consul UI at $CONSUL_URL"
+        open "$CONSUL_URL" || open "$CONSUL_URL" || echo "Please open $CONSUL_URL in your browser"
         echo "Opening Frontend at $FRONTEND_URL"
-        open "$FRONTEND_URL" || xdg-open "$FRONTEND_URL" || echo "Please open $FRONTEND_URL in your browser"
-        sleep 1
+        open "$FRONTEND_URL" || open "$FRONTEND_URL" || echo "Please open $FRONTEND_URL in your browser"
         echo "Opening Backend at $BACKEND_URL"
-        open "$BACKEND_URL" || xdg-open "$BACKEND_URL" || echo "Please open $BACKEND_URL in your browser"
+        open "$BACKEND_URL" || open "$BACKEND_URL" || echo "Please open $BACKEND_URL in your browser"
 
   ui:consul:
     desc: Open Consul UI in browser
     dir: terraform
+    silent: true
     cmds:
       - |
         CONSUL_URL=$(terraform output -raw consul_url 2>/dev/null || true)
@@ -253,6 +256,7 @@ tasks:
   ui:gateway:
     desc: Open API Gateway URL in browser
     dir: terraform
+    silent: true
     cmds:
       - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 30
       - |
@@ -376,45 +380,3 @@ tasks:
       - sleep 30
       - task: apply:consul
       - echo "✓ Consul Helm release reinstalled"
-
-  consul:backup:
-    desc: Create a snapshot of Consul data
-    cmds:
-      - bash scripts/backup-consul.sh {{.CONSUL_NAMESPACE}}
-
-  help:
-    desc: Show detailed help information
-    cmds:
-      - |
-        cat << 'EOF'
-        Consul on GKE - Task Runner Help
-        =================================
-
-        Common Workflows:
-
-        1. Initial Setup:
-           task init
-           task deploy
-           task status
-
-        2. Check Status:
-           task status
-           task gateway:ip
-
-        3. Access Consul UI:
-           task consul:get-token
-           task consul:port-forward
-
-        4. Test Deployment:
-           task test
-           task test:gateway
-
-        5. View Logs:
-           task consul:logs
-           task cert-manager:logs
-
-        6. Cleanup:
-           task destroy
-
-        For more information, see README.md
-        EOF

@@ -239,6 +239,11 @@ task test:gateway     # Test gateway endpoints
 task consul:get-token      # Get bootstrap ACL token
 task consul:port-forward   # Access Consul UI locally
 
+# UI operations (open in browser)
+task ui                    # Open frontend, backend, and Consul UI
+task ui:consul             # Open Consul UI only
+task ui:gateway            # Open API Gateway URL
+
 # Logs
 task consul:logs           # View Consul server logs
 task cert-manager:logs     # View cert-manager logs
