@@ -15,11 +15,6 @@ variable "apigw_fqdn" {
   type        = string
 }
 
-variable "consul_fqdn" {
-  description = "Fully Qualified Domain Name for Consul"
-  type        = string
-}
-
 variable "project_id" {
   description = "GCP project ID"
   type        = string

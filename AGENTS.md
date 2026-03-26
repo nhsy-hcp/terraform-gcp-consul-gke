@@ -38,6 +38,7 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 - **Values Templating:** Use `terraform/templates/consul-values.yaml.tpl` for dynamic Consul configuration.
 - **Validation:** Always validate `consul-values.yaml.tpl` against the schema [official Consul Helm chart values.yaml](https://github.com/hashicorp/consul-helm/blob/master/values.yaml)
   to ensure structure and compatibility.
+- **LoadBalancer IP Wait:** The `consul-gateway` module includes a `null_resource` that automatically waits up to 120 seconds for GCP to assign a LoadBalancer external IP. This ensures the `apigw_lb_address` output is always populated on successful deployment, eliminating race conditions. The wait is triggered via `scripts/wait-for-lb-ip.sh` and re-runs only when the gateway Helm release is recreated.
 
 ### 3. Security & Identity
 

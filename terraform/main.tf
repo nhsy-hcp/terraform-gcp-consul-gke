@@ -102,7 +102,6 @@ module "consul_gateway" {
   deploy_gateway         = var.deploy_api_gateway
   gateway_namespace      = module.consul.namespace
   apigw_fqdn             = local.apigw_fqdn
-  consul_fqdn            = local.consul_fqdn
   project_id             = var.project_id
   cert_email             = var.cert_email
   use_production_issuer  = var.use_production_issuer

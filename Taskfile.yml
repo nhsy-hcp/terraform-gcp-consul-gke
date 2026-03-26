@@ -185,8 +185,6 @@ tasks:
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
       - terraform apply -target=module.consul_gateway.helm_release.consul_gateway -auto-approve
-      - echo "Waiting for LoadBalancer IP assignment..."
-      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 120
       - echo "Waiting for TLS certificate to be ready..."
       - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout=300s
       - echo "✓ Gateway and TLS certificate deployed"
@@ -328,7 +326,6 @@ tasks:
     dir: terraform
     silent: true
     cmds:
-      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 30
       - |
         GATEWAY_URL=$(terraform output -raw consul_fqdn 2>/dev/null || true)
         if [ -z "$GATEWAY_URL" ]; then

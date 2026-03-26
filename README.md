@@ -85,9 +85,12 @@ The `task apply` command performs a **staged deployment** with automatic validat
    - **Gateway API CRDs**: Auto-installed if missing (HTTPRoute, Gateway, etc.)
    - **Services**: Backend and frontend deployed first
    - **API Gateway**: Deployed after services are ready
-   - **Verification**: LoadBalancer IP assignment and TLS certificate validation
+   - **LoadBalancer IP Wait**: Terraform automatically waits up to 120s for GCP to assign external IP
+   - **Verification**: TLS certificate validation
 
 Each stage includes confirmation prompts. Use `task apply -- --yes` to skip prompts for CI/CD.
+
+**Note:** The API Gateway deployment includes an automatic wait for LoadBalancer IP assignment (up to 120 seconds). This ensures the `apigw_lb_address` output is always populated on successful deployment, eliminating race conditions.
 
 ### 3. Verify Deployment
 
