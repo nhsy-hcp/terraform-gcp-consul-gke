@@ -148,18 +148,18 @@ tasks:
       - terraform apply -target=module.cert_manager -auto-approve
       - echo "✓ cert-manager deployed and initialized"
 
-  validate:gateway-crds:
+  verify:gateway-crds:
     desc: Verify Gateway API CRDs are installed
     silent: true
     cmds:
-      - bash {{.PROJECT_ROOT}}/scripts/validate-gateway-crds.sh
+      - bash {{.PROJECT_ROOT}}/scripts/verify-gateway-crds.sh
 
   apply:helm-charts:
     desc: Stage 5 - Deploy application helm charts via Terraform (staged)
     dir: terraform
     deps:
       - terraform:check-vars
-      - validate:gateway-crds
+      - verify:gateway-crds
     cmds:
       - task: apply:gateway
       - task: apply:services
@@ -170,7 +170,7 @@ tasks:
     dir: terraform
     deps:
       - terraform:check-vars
-      - validate:gateway-crds
+      - verify:gateway-crds
     silent: true
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
@@ -184,7 +184,7 @@ tasks:
     dir: terraform
     deps:
       - terraform:check-vars
-      - validate:gateway-crds
+      - verify:gateway-crds
     silent: true
     cmds:
       - echo "Deploying services and HTTPRoutes..."

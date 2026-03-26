@@ -32,12 +32,6 @@ echo "Demo Namespace: $DEMO_NAMESPACE"
 echo ""
 
 echo "Testing HTTPS Web UI (root path):"
-echo "Command: curl -k -s -v --resolve \"$DEMO_FQDN:443:$GATEWAY_IP\" \"https://$DEMO_FQDN/\""
-WEB_RESPONSE=$(curl -k -s -v --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/" 2>&1)
-echo "$WEB_RESPONSE"
-echo ""
-
-# Extract and validate web HTTP status code
 WEB_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/")
 if [[ "$WEB_STATUS" -ge 200 && "$WEB_STATUS" -lt 300 ]]; then
   echo "✅ Web UI test passed (HTTP $WEB_STATUS)"
@@ -48,12 +42,6 @@ fi
 echo ""
 
 echo "Testing HTTPS API (/api path):"
-echo "Command: curl -k -s -v --resolve \"$DEMO_FQDN:443:$GATEWAY_IP\" \"https://$DEMO_FQDN/api\""
-API_RESPONSE=$(curl -k -s -v --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/api" 2>&1)
-echo "$API_RESPONSE"
-echo ""
-
-# Extract and validate API HTTP status code
 API_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/api")
 if [[ "$API_STATUS" -ge 200 && "$API_STATUS" -lt 300 ]]; then
   echo "✅ API test passed (HTTP $API_STATUS)"

@@ -190,7 +190,7 @@ task cert-manager:logs     # cert-manager logs
 
 **Gateway Issues:**
 - Gateway not programmed: Check `kubectl describe gateway api-gateway -n consul`
-- Missing CRDs: Run `task validate:gateway-crds`
+- Missing CRDs: Run `task verify:gateway-crds`
 - View logs: `kubectl logs -n consul -l component=api-gateway`
 
 **Service Mesh:**

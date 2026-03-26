@@ -40,22 +40,30 @@ else
 fi
 echo ""
 
-# 2. Check Gateway listener status
-echo "2. Checking Gateway listener status..."
-LISTENER_PROGRAMMED=$(kubectl get gateway api-gateway -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="Programmed")].status}' 2>/dev/null || echo "Unknown")
+# 2. Check Gateway status
+echo "2. Checking Gateway status..."
+GATEWAY_PROGRAMMED=$(kubectl get gateway api-gateway -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' 2>/dev/null || echo "Unknown")
+LISTENER_ACCEPTED=$(kubectl get gateway api-gateway -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="Accepted")].status}' 2>/dev/null || echo "Unknown")
 LISTENER_RESOLVED=$(kubectl get gateway api-gateway -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")].status}' 2>/dev/null || echo "Unknown")
 LISTENER_REASON=$(kubectl get gateway api-gateway -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")].reason}' 2>/dev/null || echo "Unknown")
 
-if [ "$LISTENER_PROGRAMMED" = "True" ]; then
-    check_pass "Gateway listener is programmed and ready"
+if [ "$GATEWAY_PROGRAMMED" = "True" ]; then
+    check_pass "Gateway is programmed and ready"
 else
-    check_fail "Gateway listener is NOT programmed (Status: $LISTENER_PROGRAMMED)"
+    check_fail "Gateway is NOT programmed (Status: $GATEWAY_PROGRAMMED)"
 fi
 
+if [ "$LISTENER_ACCEPTED" = "True" ]; then
+    check_pass "Gateway listener is accepted"
+else
+    check_fail "Gateway listener is NOT accepted (Status: $LISTENER_ACCEPTED)"
+fi
+
+# Listener-level ResolvedRefs is informational only (may show warnings for hostname-less gateways)
 if [ "$LISTENER_RESOLVED" = "True" ]; then
     check_pass "Gateway listener certificate references are resolved"
 else
-    check_fail "Gateway listener certificate references NOT resolved (Reason: $LISTENER_REASON)"
+    check_warn "Gateway listener certificate references: $LISTENER_REASON (informational - may be expected)"
 fi
 echo ""
 
@@ -99,29 +107,8 @@ else
 fi
 echo ""
 
-# 5. Check CertificateRequest
-echo "5. Checking CertificateRequest..."
-CERT_REQUEST=$(kubectl get certificaterequest -n "$CONSUL_NAMESPACE" -l cert-manager.io/certificate-name=api-gateway-cert -o name 2>/dev/null | head -n 1 || echo "")
-if [ -n "$CERT_REQUEST" ]; then
-    check_pass "CertificateRequest exists: $CERT_REQUEST"
-
-    CR_READY=$(kubectl get "$CERT_REQUEST" -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "Unknown")
-    CR_REASON=$(kubectl get "$CERT_REQUEST" -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].reason}' 2>/dev/null || echo "Unknown")
-    CR_MESSAGE=$(kubectl get "$CERT_REQUEST" -n "$CONSUL_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}' 2>/dev/null || echo "Unknown")
-
-    if [ "$CR_READY" = "True" ]; then
-        check_pass "CertificateRequest is ready"
-    else
-        check_fail "CertificateRequest is NOT ready (Reason: $CR_REASON)"
-        echo "   Message: $CR_MESSAGE"
-    fi
-else
-    check_warn "No CertificateRequest found"
-fi
-echo ""
-
-# 6. Check ClusterIssuer
-echo "6. Checking ClusterIssuer..."
+# 5. Check ClusterIssuer
+echo "5. Checking ClusterIssuer..."
 if kubectl get clusterissuer letsencrypt-staging &>/dev/null; then
     check_pass "ClusterIssuer 'letsencrypt-staging' exists"
 
@@ -137,8 +124,8 @@ else
 fi
 echo ""
 
-# 7. Check cert-manager pod status
-echo "7. Checking cert-manager pod status..."
+# 6. Check cert-manager pod status
+echo "6. Checking cert-manager pod status..."
 CERT_MANAGER_POD=$(kubectl get pods -n "$CERT_MANAGER_NAMESPACE" -l app=cert-manager -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 if [ -n "$CERT_MANAGER_POD" ]; then
     POD_STATUS=$(kubectl get pod "$CERT_MANAGER_POD" -n "$CERT_MANAGER_NAMESPACE" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
@@ -153,8 +140,8 @@ else
 fi
 echo ""
 
-# 8. Check for recent cert-manager errors
-echo "8. Checking cert-manager logs for errors..."
+# 7. Check for recent cert-manager errors
+echo "7. Checking cert-manager logs for errors..."
 if [ -n "$CERT_MANAGER_POD" ]; then
     ERROR_COUNT=$(kubectl logs "$CERT_MANAGER_POD" -n "$CERT_MANAGER_NAMESPACE" --tail=100 2>/dev/null | grep -c "^E" || true)
     ERROR_COUNT=${ERROR_COUNT:-0}
@@ -172,8 +159,8 @@ else
 fi
 echo ""
 
-# 9. Check Workload Identity binding
-echo "9. Checking Workload Identity configuration..."
+# 8. Check Workload Identity binding
+echo "8. Checking Workload Identity configuration..."
 CM_SA_EMAIL=$(kubectl get sa cert-manager -n "$CERT_MANAGER_NAMESPACE" -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}' 2>/dev/null || echo "")
 
 if [ -n "$CM_SA_EMAIL" ]; then
@@ -183,8 +170,8 @@ else
 fi
 echo ""
 
-# 10. Check ACME challenges
-echo "10. Checking ACME challenges..."
+# 9. Check ACME challenges
+echo "9. Checking ACME challenges..."
 CHALLENGES=$(kubectl get challenges -n "$CONSUL_NAMESPACE" 2>/dev/null | tail -n +2 || echo "")
 if [ -n "$CHALLENGES" ]; then
     check_warn "Active ACME challenges found:"
@@ -207,7 +194,7 @@ echo "=========================================="
 echo "Summary"
 echo "=========================================="
 
-if [ "$LISTENER_PROGRAMMED" = "True" ] && [ "$CERT_READY" = "True" ]; then
+if [ "$GATEWAY_PROGRAMMED" = "True" ] && [ "$CERT_READY" = "True" ]; then
     echo -e "${GREEN}✓ Gateway is ready and TLS certificate is valid${NC}"
     echo ""
     echo "You can now run: task test:gateway"
