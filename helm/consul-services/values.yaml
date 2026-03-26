@@ -116,4 +116,4 @@ routes:
     enabled: true
     name: backend-route
     hostname: app.example.com
-    path: /api
+    path: /

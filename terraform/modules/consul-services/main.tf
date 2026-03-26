@@ -46,6 +46,10 @@ resource "helm_release" "consul_services" {
     {
       name  = "routes.backend.hostname"
       value = var.backend_fqdn
+    },
+    {
+      name  = "routes.backend.path"
+      value = "/"
     }
   ]
 
