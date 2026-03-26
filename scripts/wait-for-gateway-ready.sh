@@ -13,15 +13,16 @@ ELAPSED=0
 INTERVAL=10
 
 while [ $ELAPSED -lt "$TIMEOUT" ]; do
-  PROGRAMMED=$(kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="Programmed")].status}' 2>/dev/null || echo "Unknown")
-  RESOLVED=$(kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")].status}' 2>/dev/null || echo "Unknown")
+  # Check Gateway-level Programmed status (not listener-level)
+  GATEWAY_PROGRAMMED=$(kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' 2>/dev/null || echo "Unknown")
+  LISTENER_ACCEPTED=$(kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" -o jsonpath='{.status.listeners[0].conditions[?(@.type=="Accepted")].status}' 2>/dev/null || echo "Unknown")
 
-  if [ "$PROGRAMMED" = "True" ] && [ "$RESOLVED" = "True" ]; then
-    echo "✓ Gateway listener programmed and certificate references resolved"
+  if [ "$GATEWAY_PROGRAMMED" = "True" ] && [ "$LISTENER_ACCEPTED" = "True" ]; then
+    echo "✓ Gateway programmed and listener accepted"
     exit 0
   fi
 
-  echo "Gateway status - Programmed: $PROGRAMMED, ResolvedRefs: $RESOLVED (${ELAPSED}s/${TIMEOUT}s)"
+  echo "Gateway status - Programmed: $GATEWAY_PROGRAMMED, Listener Accepted: $LISTENER_ACCEPTED (${ELAPSED}s/${TIMEOUT}s)"
   sleep $INTERVAL
   ELAPSED=$((ELAPSED + INTERVAL))
 done

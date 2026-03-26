@@ -17,8 +17,6 @@ spec:
     {{- if .Values.gateway.https.enabled }}
     # HTTPS listener (TLS terminated here)
     - name: https
-      hostnames:
-        - "*"
       protocol: HTTPS
       port: {{ .Values.gateway.https.port }}
       allowedRoutes:
