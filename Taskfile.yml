@@ -105,6 +105,7 @@ tasks:
         vars:
           CLI_ARGS: '{{.CLI_ARGS}}'
       - task: apply:helm-charts
+
   apply:prereqs:
     desc: Stage 1 - Deploy prerequisites (VPC, APIs, etc)
     dir: terraform
@@ -176,24 +177,30 @@ tasks:
 
   apply:helm-charts:gateway:
     desc: Deploy API Gateway with TLS certificate
-    internal: true
-    silent: true
     dir: terraform
+    deps:
+      - terraform:check-vars
+      - validate:gateway-crds
+    silent: true
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
-      - terraform apply -target=module.helm_charts.helm_release.consul_gateway -auto-approve
+      - terraform apply -target=module.consul_gateway.helm_release.consul_gateway -auto-approve
+      - echo "Waiting for LoadBalancer IP assignment..."
+      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 120
       - echo "Waiting for TLS certificate to be ready..."
       - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout=300s
       - echo "✓ Gateway and TLS certificate deployed"
 
   apply:helm-charts:services:
     desc: Deploy services with HTTPRoutes
-    internal: true
-    silent: true
     dir: terraform
+    deps:
+      - terraform:check-vars
+      - validate:gateway-crds
+    silent: true
     cmds:
       - echo "Deploying services and HTTPRoutes..."
-      - terraform apply -target=module.helm_charts.helm_release.consul_services -auto-approve
+      - terraform apply -target=module.consul_services.helm_release.consul_services -auto-approve
       - echo "Waiting for service pods to be ready..."
       - kubectl wait --for=condition=ready pod -l app=backend -n default --timeout=120s || true
       - kubectl wait --for=condition=ready pod -l app=frontend -n default --timeout=120s || true
@@ -201,14 +208,13 @@ tasks:
 
   apply:helm-charts:verify:
     desc: Verify complete deployment and connectivity
-    internal: true
-    silent: true
     dir: terraform
+    deps:
+      - terraform:check-vars
+    silent: true
     cmds:
       - echo "Finalizing deployment..."
       - terraform apply -auto-approve
-      - echo "Waiting for LoadBalancer IP assignment..."
-      - bash ../scripts/wait-for-lb-ip.sh {{.CONSUL_NAMESPACE}} 120
       - echo "Verifying HTTPRoutes..."
       - kubectl get httproute -n default -o wide
       - echo "Running comprehensive TLS verification..."
@@ -278,12 +284,6 @@ tasks:
     desc: Retrieve Consul bootstrap ACL token
     cmds:
       - bash scripts/get-consul-token.sh {{.CONSUL_NAMESPACE}}
-
-  consul:port-forward:
-    desc: Port-forward Consul UI to localhost:8501
-    cmds:
-      - echo "Consul UI will be available at https://localhost:8501"
-      - kubectl port-forward service/consul-ui --namespace {{.CONSUL_NAMESPACE}} 8501:443
 
   ui:
     desc: Open Frontend, Backend, and Consul UI in browser

@@ -26,8 +26,9 @@
 |------|--------|---------|
 | <a name="module_cert_manager"></a> [cert\_manager](#module\_cert\_manager) | ./modules/cert-manager | n/a |
 | <a name="module_consul"></a> [consul](#module\_consul) | ./modules/consul | n/a |
+| <a name="module_consul_gateway"></a> [consul\_gateway](#module\_consul\_gateway) | ./modules/consul-gateway | n/a |
+| <a name="module_consul_services"></a> [consul\_services](#module\_consul\_services) | ./modules/consul-services | n/a |
 | <a name="module_gke"></a> [gke](#module\_gke) | ./modules/gke | n/a |
-| <a name="module_helm_charts"></a> [helm\_charts](#module\_helm\_charts) | ./modules/helm-charts | n/a |
 | <a name="module_prereqs"></a> [prereqs](#module\_prereqs) | ./modules/prereqs | n/a |
 
 ## Resources

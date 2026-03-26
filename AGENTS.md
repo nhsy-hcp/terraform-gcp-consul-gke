@@ -34,7 +34,7 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 
 - **Namespace Isolation:** Deploy Consul to the `consul` namespace and application services to their respective namespaces (defaulting to `default` or `services`).
 - **Terraform-Only Deployments:** ALL Kubernetes workloads and Helm charts MUST be deployed via Terraform modules. NEVER use `helm install` or `helm upgrade` commands directly.
-- **Helm Integration:** Helm charts in `helm/` directory are deployed exclusively through Terraform's `helm_release` resources in the `modules/helm-charts/` module.
+- **Helm Integration:** Helm charts in `helm/` directory are deployed exclusively through Terraform's `helm_release` resources in the `modules/consul-gateway/` and `modules/consul-services/` modules.
 - **Values Templating:** Use `terraform/templates/consul-values.yaml.tpl` for dynamic Consul configuration.
 - **Validation:** Always validate `consul-values.yaml.tpl` against the schema [official Consul Helm chart values.yaml](https://github.com/hashicorp/consul-helm/blob/master/values.yaml)
   to ensure structure and compatibility.
@@ -61,9 +61,12 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 | | `task apply:prereqs` | Stage 1 - Deploy VPC, APIs, etc. |
 | | `task apply:gke` | Stage 2 - Deploy GKE cluster |
 | | `task apply:consul` | Stage 3 - Deploy Consul service mesh |
-| | `task apply:cert-manager` | Stage 4 - Deploy cert-manager |
-| | `task apply:helm-charts` | Stage 5 - Deploy initial app helm charts via Terraform |
-| **Kubernetes** | `task gke:credentials` | Get GKE cluster credentials (configure kubectl) |
+| | task apply:cert-manager | Stage 4 - Deploy cert-manager |
+| | task apply:helm-charts | Stage 5 - Deploy initial app helm charts via Terraform |
+| | task apply:helm-charts:gateway | Deploy API Gateway and TLS certificate |
+| | task apply:helm-charts:services | Deploy sample services and HTTPRoutes |
+| | task apply:helm-charts:verify | Verify complete deployment and connectivity |
+| **Kubernetes** | task gke:credentials | Get GKE cluster credentials (configure kubectl) |
 | | `task deploy:services` | Deploy sample services (backend/frontend) via Helm |
 | | `task deploy:gateway` | Deploy API Gateway, routes, and TLS via Helm |
 | | `task deploy:all` | Deploy all sample services and API Gateway |

@@ -1,61 +1,3 @@
-
-# Deploy consul-services Helm chart
-resource "helm_release" "consul_services" {
-  count = var.deploy_services ? 1 : 0
-
-  name      = "consul-services"
-  chart     = "${path.root}/../helm/consul-services"
-  namespace = var.services_namespace
-
-  set = [
-    {
-      name  = "backend.enabled"
-      value = var.backend_enabled
-    },
-    {
-      name  = "backend.replicas"
-      value = var.backend_replicas
-    },
-    {
-      name  = "frontend.enabled"
-      value = var.frontend_enabled
-    },
-    {
-      name  = "frontend.replicas"
-      value = var.frontend_replicas
-    },
-    {
-      name  = "intentions.enabled"
-      value = var.intentions_enabled
-    },
-    {
-      name  = "routes.enabled"
-      value = var.deploy_gateway
-    },
-    {
-      name  = "routes.gateway.name"
-      value = "api-gateway"
-    },
-    {
-      name  = "routes.gateway.namespace"
-      value = var.gateway_namespace
-    },
-    {
-      name  = "routes.frontend.hostname"
-      value = var.frontend_fqdn
-    },
-    {
-      name  = "routes.backend.hostname"
-      value = var.backend_fqdn
-    }
-  ]
-
-  depends_on = [
-    var.consul_namespace,
-    helm_release.consul_gateway
-  ]
-}
-
 # Deploy consul-gateway Helm chart
 resource "helm_release" "consul_gateway" {
   count = var.deploy_gateway ? 1 : 0
@@ -119,17 +61,6 @@ resource "helm_release" "consul_gateway" {
   depends_on = [var.consul_namespace, var.cert_manager_namespace]
 }
 
-# Wait for API Gateway LoadBalancer IP to be assigned
-resource "null_resource" "wait_for_gateway_lb" {
-  count = var.deploy_gateway ? 1 : 0
-
-  provisioner "local-exec" {
-    command = "${path.module}/../../../scripts/wait-for-lb-ip.sh ${var.gateway_namespace} 120"
-  }
-
-  depends_on = [helm_release.consul_gateway]
-}
-
 # Data source to fetch the external IP of the API Gateway service
 data "kubernetes_service_v1" "api_gateway" {
   count = var.deploy_gateway ? 1 : 0
@@ -137,5 +68,5 @@ data "kubernetes_service_v1" "api_gateway" {
     name      = "api-gateway"
     namespace = var.gateway_namespace
   }
-  depends_on = [null_resource.wait_for_gateway_lb]
+  depends_on = [helm_release.consul_gateway]
 }

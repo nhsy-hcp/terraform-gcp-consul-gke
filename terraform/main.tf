@@ -95,22 +95,13 @@ module "cert_manager" {
   depends_on = [module.gke.primary_nodes_id]
 }
 
-# Deploy Helm charts (services and gateway)
-module "helm_charts" {
-  source = "./modules/helm-charts"
+# Deploy API Gateway
+module "consul_gateway" {
+  source = "./modules/consul-gateway"
 
-  deploy_services        = var.deploy_sample_services
   deploy_gateway         = var.deploy_api_gateway
-  services_namespace     = var.services_namespace
   gateway_namespace      = module.consul.namespace
-  backend_enabled        = var.backend_enabled
-  backend_replicas       = var.backend_replicas
-  frontend_enabled       = var.frontend_enabled
-  frontend_replicas      = var.frontend_replicas
-  intentions_enabled     = var.intentions_enabled
   apigw_fqdn             = local.apigw_fqdn
-  frontend_fqdn          = local.frontend_fqdn
-  backend_fqdn           = local.backend_fqdn
   consul_fqdn            = local.consul_fqdn
   project_id             = var.project_id
   cert_email             = var.cert_email
@@ -123,6 +114,27 @@ module "helm_charts" {
   depends_on = [module.consul, module.cert_manager]
 }
 
+# Deploy application services
+module "consul_services" {
+  source = "./modules/consul-services"
+
+  deploy_services      = var.deploy_sample_services
+  services_namespace   = var.services_namespace
+  backend_enabled      = var.backend_enabled
+  backend_replicas     = var.backend_replicas
+  frontend_enabled     = var.frontend_enabled
+  frontend_replicas    = var.frontend_replicas
+  intentions_enabled   = var.intentions_enabled
+  deploy_gateway       = var.deploy_api_gateway
+  gateway_namespace    = module.consul.namespace
+  frontend_fqdn        = local.frontend_fqdn
+  backend_fqdn         = local.backend_fqdn
+  consul_namespace     = module.consul.namespace
+  gateway_release_name = module.consul_gateway.gateway_release_name
+
+  depends_on = [module.consul, module.consul_gateway]
+}
+
 # DNS Record for API Gateway (Root Domain)
 resource "google_dns_record_set" "api_gateway" {
   name         = "${local.apigw_fqdn}."
@@ -130,7 +142,7 @@ resource "google_dns_record_set" "api_gateway" {
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.main.name
   project      = var.project_id
-  rrdatas      = [module.helm_charts.apigw_lb_address]
+  rrdatas      = [module.consul_gateway.apigw_lb_address]
 }
 
 # Wildcard CNAME for all consul subdomains (frontend, backend, etc.) pointing to API Gateway

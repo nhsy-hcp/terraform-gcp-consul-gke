@@ -116,12 +116,12 @@ output "cert_manager_service_account" {
 
 output "services_release_name" {
   description = "Helm release name for consul-services"
-  value       = module.helm_charts.services_release_name
+  value       = module.consul_services.services_release_name
 }
 
 output "gateway_release_name" {
   description = "Helm release name for consul-gateway"
-  value       = module.helm_charts.gateway_release_name
+  value       = module.consul_gateway.gateway_release_name
 }
 
 # ============================================================================
@@ -164,7 +164,7 @@ output "api_gateway_backend_url" {
 
 output "apigw_lb_address" {
   description = "External IP of the API Gateway"
-  value       = module.helm_charts.apigw_lb_address
+  value       = module.consul_gateway.apigw_lb_address
 }
 
 output "consul_lb_address" {
