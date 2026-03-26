@@ -158,7 +158,7 @@ tasks:
     desc: Verify Gateway API CRDs are installed
     silent: true
     cmds:
-      - bash scripts/validate-gateway-crds.sh
+      - bash {{.PROJECT_ROOT}}/scripts/validate-gateway-crds.sh
 
   apply:helm-charts:
     desc: Stage 5 - Deploy application helm charts via Terraform (staged)
@@ -183,8 +183,8 @@ tasks:
       - terraform apply -target=module.consul_gateway.helm_release.consul_gateway -auto-approve
       - echo "Waiting for TLS certificate to be issued (timeout {{.CERTIFICATE_TIMEOUT}}s)..."
       - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout={{.CERTIFICATE_TIMEOUT}}s
-      - bash scripts/wait-for-tls-secret.sh {{.CONSUL_NAMESPACE}} api-gateway-tls
-      - bash scripts/wait-for-gateway-ready.sh {{.CONSUL_NAMESPACE}} api-gateway {{.GATEWAY_TIMEOUT}}
+      - bash {{.PROJECT_ROOT}}/scripts/wait-for-tls-secret.sh {{.CONSUL_NAMESPACE}} api-gateway-tls
+      - bash {{.PROJECT_ROOT}}/scripts/wait-for-gateway-ready.sh {{.CONSUL_NAMESPACE}} api-gateway {{.GATEWAY_TIMEOUT}}
       - echo "✓ Gateway and TLS certificate deployed and ready"
 
   apply:services:
@@ -200,7 +200,7 @@ tasks:
       - echo "Waiting for service pods to be ready..."
       - kubectl wait --for=condition=ready pod -l app=api -n {{.DEMO_NAMESPACE}} --timeout=120s || echo "⚠ API pod not ready"
       - kubectl wait --for=condition=ready pod -l app=web -n {{.DEMO_NAMESPACE}} --timeout=120s || echo "⚠ Web pod not ready"
-      - bash scripts/wait-for-loadbalancer-ip.sh {{.CONSUL_NAMESPACE}} component=api-gateway {{.LOADBALANCER_TIMEOUT}}
+      - bash {{.PROJECT_ROOT}}/scripts/wait-for-loadbalancer-ip.sh {{.CONSUL_NAMESPACE}} component=api-gateway {{.LOADBALANCER_TIMEOUT}}
       - echo "✓ Services and routes deployed"
 
   apply:verify:
@@ -266,12 +266,12 @@ tasks:
   status:
     desc: Show status of all components
     cmds:
-      - bash scripts/show-status.sh {{.CONSUL_NAMESPACE}}
+      - bash {{.PROJECT_ROOT}}/scripts/show-status.sh {{.CONSUL_NAMESPACE}}
 
   consul:token:
     desc: Retrieve Consul bootstrap ACL token
     cmds:
-      - bash scripts/get-consul-token.sh {{.CONSUL_NAMESPACE}}
+      - bash {{.PROJECT_ROOT}}/scripts/get-consul-token.sh {{.CONSUL_NAMESPACE}}
 
   ui:
     desc: Open Web UI, API, and Consul UI in browser
@@ -354,12 +354,12 @@ tasks:
   test:gateway:
     desc: Test API Gateway endpoints
     cmds:
-      - bash scripts/test-gateway.sh {{.CONSUL_NAMESPACE}} {{.DEMO_NAMESPACE}}
+      - bash {{.PROJECT_ROOT}}/scripts/test-gateway.sh {{.CONSUL_NAMESPACE}} {{.DEMO_NAMESPACE}}
 
   verify:gateway-tls:
     desc: Verify API Gateway TLS certificate status and configuration
     cmds:
-      - bash scripts/verify-gateway-tls.sh {{.CONSUL_NAMESPACE}} {{.CERT_MANAGER_NAMESPACE}}
+      - bash {{.PROJECT_ROOT}}/scripts/verify-gateway-tls.sh {{.CONSUL_NAMESPACE}} {{.CERT_MANAGER_NAMESPACE}}
 
   recreate:certificate:
     desc: Force recreation of API Gateway TLS certificate
