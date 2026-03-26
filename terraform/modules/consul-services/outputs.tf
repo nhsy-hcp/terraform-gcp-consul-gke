@@ -3,7 +3,7 @@ output "services_release_name" {
   value       = var.deploy_services ? helm_release.consul_services[0].name : null
 }
 
-output "services_namespace" {
-  description = "Kubernetes namespace for services"
-  value       = var.services_namespace
+output "demo_namespace" {
+  description = "Kubernetes namespace for demo application services"
+  value       = var.demo_namespace
 }

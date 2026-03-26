@@ -49,8 +49,8 @@
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_authorized_networks"></a> [additional\_authorized\_networks](#input\_additional\_authorized\_networks) | CIDR blocks for GKE master authorized networks. When empty (default), current IP is auto-detected. When specified, ONLY these networks are used (mutually exclusive with auto-detection). | <pre>list(object({<br/>    cidr_block   = string<br/>    display_name = string<br/>  }))</pre> | `[]` | no |
-| <a name="input_backend_enabled"></a> [backend\_enabled](#input\_backend\_enabled) | Enable backend service | `bool` | `true` | no |
-| <a name="input_backend_replicas"></a> [backend\_replicas](#input\_backend\_replicas) | Number of backend replicas | `number` | `2` | no |
+| <a name="input_api_enabled"></a> [api\_enabled](#input\_api\_enabled) | Enable API service | `bool` | `true` | no |
+| <a name="input_api_replicas"></a> [api\_replicas](#input\_api\_replicas) | Number of API replicas | `number` | `2` | no |
 | <a name="input_cert_email"></a> [cert\_email](#input\_cert\_email) | Email address for Let's Encrypt certificate notifications | `string` | n/a | yes |
 | <a name="input_cert_manager_chart_version"></a> [cert\_manager\_chart\_version](#input\_cert\_manager\_chart\_version) | cert-manager Helm chart version | `string` | `"v1.14.0"` | no |
 | <a name="input_cert_manager_namespace"></a> [cert\_manager\_namespace](#input\_cert\_manager\_namespace) | Kubernetes namespace for cert-manager | `string` | `"cert-manager"` | no |
@@ -65,13 +65,12 @@
 | <a name="input_consul_storage_class"></a> [consul\_storage\_class](#input\_consul\_storage\_class) | Storage class for Consul server persistent volumes | `string` | `"standard-rwo"` | no |
 | <a name="input_consul_storage_size"></a> [consul\_storage\_size](#input\_consul\_storage\_size) | Storage size for Consul server persistent volumes | `string` | `"10Gi"` | no |
 | <a name="input_consul_tls_enabled"></a> [consul\_tls\_enabled](#input\_consul\_tls\_enabled) | Enable TLS for Consul | `bool` | `true` | no |
+| <a name="input_demo_namespace"></a> [demo\_namespace](#input\_demo\_namespace) | Kubernetes namespace for demo application services | `string` | `"demo"` | no |
 | <a name="input_deploy_api_gateway"></a> [deploy\_api\_gateway](#input\_deploy\_api\_gateway) | Deploy API Gateway with TLS configuration | `bool` | `true` | no |
-| <a name="input_deploy_sample_services"></a> [deploy\_sample\_services](#input\_deploy\_sample\_services) | Deploy sample backend and frontend services | `bool` | `true` | no |
+| <a name="input_deploy_sample_services"></a> [deploy\_sample\_services](#input\_deploy\_sample\_services) | Deploy sample api and web services | `bool` | `true` | no |
 | <a name="input_disk_size_gb"></a> [disk\_size\_gb](#input\_disk\_size\_gb) | Disk size in GB for GKE nodes | `number` | `100` | no |
 | <a name="input_disk_type"></a> [disk\_type](#input\_disk\_type) | Disk type for GKE nodes | `string` | `"pd-standard"` | no |
 | <a name="input_dns_zone_name"></a> [dns\_zone\_name](#input\_dns\_zone\_name) | Name of the existing Cloud DNS managed zone | `string` | n/a | yes |
-| <a name="input_frontend_enabled"></a> [frontend\_enabled](#input\_frontend\_enabled) | Enable frontend service | `bool` | `true` | no |
-| <a name="input_frontend_replicas"></a> [frontend\_replicas](#input\_frontend\_replicas) | Number of frontend replicas | `number` | `2` | no |
 | <a name="input_intentions_enabled"></a> [intentions\_enabled](#input\_intentions\_enabled) | Enable service intentions (authorization rules) | `bool` | `true` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Machine type for GKE nodes | `string` | `"e2-standard-4"` | no |
 | <a name="input_maintenance_start_time"></a> [maintenance\_start\_time](#input\_maintenance\_start\_time) | Start time for daily maintenance window (HH:MM format) | `string` | `"03:00"` | no |
@@ -85,17 +84,16 @@
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | GCP region for the GKE cluster | `string` | `"europe-west1"` | no |
 | <a name="input_services_cidr"></a> [services\_cidr](#input\_services\_cidr) | CIDR range for GKE services (secondary range) - 10.64.4.0 to 10.64.7.255 | `string` | `"10.64.4.0/22"` | no |
-| <a name="input_services_namespace"></a> [services\_namespace](#input\_services\_namespace) | Kubernetes namespace for sample services | `string` | `"default"` | no |
 | <a name="input_subnet_cidr"></a> [subnet\_cidr](#input\_subnet\_cidr) | CIDR range for the subnet (nodes) - 10.64.0.0 to 10.64.3.255 | `string` | `"10.64.0.0/22"` | no |
 | <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | Name of the subnet to create | `string` | `"snet"` | no |
 | <a name="input_use_production_issuer"></a> [use\_production\_issuer](#input\_use\_production\_issuer) | Use Let's Encrypt production issuer (set to false for staging during testing) | `bool` | `false` | no |
+| <a name="input_web_enabled"></a> [web\_enabled](#input\_web\_enabled) | Enable Web UI service | `bool` | `true` | no |
+| <a name="input_web_replicas"></a> [web\_replicas](#input\_web\_replicas) | Number of Web UI replicas | `number` | `2` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_api_gateway_backend_url"></a> [api\_gateway\_backend\_url](#output\_api\_gateway\_backend\_url) | URL for the sample backend service |
-| <a name="output_api_gateway_frontend_url"></a> [api\_gateway\_frontend\_url](#output\_api\_gateway\_frontend\_url) | URL for the sample frontend service |
 | <a name="output_apigw_lb_address"></a> [apigw\_lb\_address](#output\_apigw\_lb\_address) | External IP of the API Gateway |
 | <a name="output_authorized_networks"></a> [authorized\_networks](#output\_authorized\_networks) | Authorized networks configured for GKE master access |
 | <a name="output_cert_manager_namespace"></a> [cert\_manager\_namespace](#output\_cert\_manager\_namespace) | Kubernetes namespace where cert-manager is deployed |
@@ -111,6 +109,10 @@
 | <a name="output_consul_namespace"></a> [consul\_namespace](#output\_consul\_namespace) | Kubernetes namespace where Consul is deployed |
 | <a name="output_consul_release_name"></a> [consul\_release\_name](#output\_consul\_release\_name) | Helm release name for Consul |
 | <a name="output_consul_url"></a> [consul\_url](#output\_consul\_url) | FQDN for the Consul UI |
+| <a name="output_demo_api_url"></a> [demo\_api\_url](#output\_demo\_api\_url) | URL for the API service |
+| <a name="output_demo_fqdn"></a> [demo\_fqdn](#output\_demo\_fqdn) | FQDN for the demo application |
+| <a name="output_demo_namespace"></a> [demo\_namespace](#output\_demo\_namespace) | Kubernetes namespace for demo application services |
+| <a name="output_demo_web_url"></a> [demo\_web\_url](#output\_demo\_web\_url) | URL for the Web UI service |
 | <a name="output_dns_zone_dns_name"></a> [dns\_zone\_dns\_name](#output\_dns\_zone\_dns\_name) | Cloud DNS managed zone DNS name |
 | <a name="output_dns_zone_name"></a> [dns\_zone\_name](#output\_dns\_zone\_name) | Cloud DNS managed zone name |
 | <a name="output_gateway_release_name"></a> [gateway\_release\_name](#output\_gateway\_release\_name) | Helm release name for consul-gateway |

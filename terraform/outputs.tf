@@ -124,6 +124,11 @@ output "gateway_release_name" {
   value       = module.consul_gateway.gateway_release_name
 }
 
+output "demo_namespace" {
+  description = "Kubernetes namespace for demo application services"
+  value       = module.consul_services.demo_namespace
+}
+
 # ============================================================================
 # DNS Outputs
 # ============================================================================
@@ -152,14 +157,19 @@ output "consul_url" {
   value       = "https://${local.consul_fqdn}"
 }
 
-output "api_gateway_frontend_url" {
-  description = "URL for the sample frontend service"
-  value       = "https://${local.frontend_fqdn}/"
+output "demo_fqdn" {
+  description = "FQDN for the demo application"
+  value       = local.demo_fqdn
 }
 
-output "api_gateway_backend_url" {
-  description = "URL for the sample backend service"
-  value       = "https://${local.backend_fqdn}/"
+output "demo_web_url" {
+  description = "URL for the Web UI service"
+  value       = "https://${local.demo_fqdn}/"
+}
+
+output "demo_api_url" {
+  description = "URL for the API service"
+  value       = "https://${local.demo_fqdn}/api"
 }
 
 output "apigw_lb_address" {

@@ -1,35 +1,35 @@
 variable "deploy_services" {
-  description = "Deploy sample services (backend and frontend)"
+  description = "Deploy sample services (api and web)"
   type        = bool
   default     = true
 }
 
-variable "services_namespace" {
-  description = "Kubernetes namespace for sample services"
+variable "demo_namespace" {
+  description = "Kubernetes namespace for demo application services"
   type        = string
-  default     = "default"
+  default     = "demo"
 }
 
-variable "backend_enabled" {
-  description = "Enable backend service"
+variable "api_enabled" {
+  description = "Enable API service"
   type        = bool
   default     = true
 }
 
-variable "backend_replicas" {
-  description = "Number of backend replicas"
+variable "api_replicas" {
+  description = "Number of API replicas"
   type        = number
   default     = 2
 }
 
-variable "frontend_enabled" {
-  description = "Enable frontend service"
+variable "web_enabled" {
+  description = "Enable Web UI service"
   type        = bool
   default     = true
 }
 
-variable "frontend_replicas" {
-  description = "Number of frontend replicas"
+variable "web_replicas" {
+  description = "Number of Web UI replicas"
   type        = number
   default     = 2
 }
@@ -52,13 +52,8 @@ variable "gateway_namespace" {
   default     = "consul"
 }
 
-variable "frontend_fqdn" {
-  description = "Fully Qualified Domain Name for the Frontend service"
-  type        = string
-}
-
-variable "backend_fqdn" {
-  description = "Fully Qualified Domain Name for the Backend service"
+variable "demo_fqdn" {
+  description = "Fully Qualified Domain Name for the demo application (shared by web and api)"
   type        = string
 }
 

@@ -25,24 +25,23 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_backend_enabled"></a> [backend\_enabled](#input\_backend\_enabled) | Enable backend service | `bool` | `true` | no |
-| <a name="input_backend_fqdn"></a> [backend\_fqdn](#input\_backend\_fqdn) | Fully Qualified Domain Name for the Backend service | `string` | n/a | yes |
-| <a name="input_backend_replicas"></a> [backend\_replicas](#input\_backend\_replicas) | Number of backend replicas | `number` | `2` | no |
+| <a name="input_api_enabled"></a> [api\_enabled](#input\_api\_enabled) | Enable API service | `bool` | `true` | no |
+| <a name="input_api_replicas"></a> [api\_replicas](#input\_api\_replicas) | Number of API replicas | `number` | `2` | no |
 | <a name="input_consul_namespace"></a> [consul\_namespace](#input\_consul\_namespace) | Consul namespace dependency | `string` | n/a | yes |
+| <a name="input_demo_fqdn"></a> [demo\_fqdn](#input\_demo\_fqdn) | Fully Qualified Domain Name for the demo application (shared by web and api) | `string` | n/a | yes |
+| <a name="input_demo_namespace"></a> [demo\_namespace](#input\_demo\_namespace) | Kubernetes namespace for demo application services | `string` | `"demo"` | no |
 | <a name="input_deploy_gateway"></a> [deploy\_gateway](#input\_deploy\_gateway) | Enable routes in the gateway | `bool` | `true` | no |
-| <a name="input_deploy_services"></a> [deploy\_services](#input\_deploy\_services) | Deploy sample services (backend and frontend) | `bool` | `true` | no |
-| <a name="input_frontend_enabled"></a> [frontend\_enabled](#input\_frontend\_enabled) | Enable frontend service | `bool` | `true` | no |
-| <a name="input_frontend_fqdn"></a> [frontend\_fqdn](#input\_frontend\_fqdn) | Fully Qualified Domain Name for the Frontend service | `string` | n/a | yes |
-| <a name="input_frontend_replicas"></a> [frontend\_replicas](#input\_frontend\_replicas) | Number of frontend replicas | `number` | `2` | no |
+| <a name="input_deploy_services"></a> [deploy\_services](#input\_deploy\_services) | Deploy sample services (api and web) | `bool` | `true` | no |
 | <a name="input_gateway_namespace"></a> [gateway\_namespace](#input\_gateway\_namespace) | Kubernetes namespace for API Gateway | `string` | `"consul"` | no |
 | <a name="input_gateway_release_name"></a> [gateway\_release\_name](#input\_gateway\_release\_name) | Gateway release name dependency | `string` | `""` | no |
 | <a name="input_intentions_enabled"></a> [intentions\_enabled](#input\_intentions\_enabled) | Enable service intentions | `bool` | `true` | no |
-| <a name="input_services_namespace"></a> [services\_namespace](#input\_services\_namespace) | Kubernetes namespace for sample services | `string` | `"default"` | no |
+| <a name="input_web_enabled"></a> [web\_enabled](#input\_web\_enabled) | Enable Web UI service | `bool` | `true` | no |
+| <a name="input_web_replicas"></a> [web\_replicas](#input\_web\_replicas) | Number of Web UI replicas | `number` | `2` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_services_namespace"></a> [services\_namespace](#output\_services\_namespace) | Kubernetes namespace for services |
+| <a name="output_demo_namespace"></a> [demo\_namespace](#output\_demo\_namespace) | Kubernetes namespace for demo application services |
 | <a name="output_services_release_name"></a> [services\_release\_name](#output\_services\_release\_name) | Helm release name for consul-services |
 <!-- END_TF_DOCS -->

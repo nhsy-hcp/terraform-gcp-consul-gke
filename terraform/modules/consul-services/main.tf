@@ -2,26 +2,35 @@
 resource "helm_release" "consul_services" {
   count = var.deploy_services ? 1 : 0
 
-  name      = "consul-services"
-  chart     = "${path.root}/../helm/consul-services"
-  namespace = var.services_namespace
+  name             = "consul-services"
+  chart            = "${path.root}/../helm/consul-services"
+  namespace        = var.demo_namespace
+  create_namespace = true
 
   set = [
     {
-      name  = "backend.enabled"
-      value = var.backend_enabled
+      name  = "global.namespace"
+      value = var.demo_namespace
     },
     {
-      name  = "backend.replicas"
-      value = var.backend_replicas
+      name  = "global.consulNamespace"
+      value = var.consul_namespace
     },
     {
-      name  = "frontend.enabled"
-      value = var.frontend_enabled
+      name  = "api.enabled"
+      value = var.api_enabled
     },
     {
-      name  = "frontend.replicas"
-      value = var.frontend_replicas
+      name  = "api.replicas"
+      value = var.api_replicas
+    },
+    {
+      name  = "web.enabled"
+      value = var.web_enabled
+    },
+    {
+      name  = "web.replicas"
+      value = var.web_replicas
     },
     {
       name  = "intentions.enabled"
@@ -40,16 +49,20 @@ resource "helm_release" "consul_services" {
       value = var.gateway_namespace
     },
     {
-      name  = "routes.frontend.hostname"
-      value = var.frontend_fqdn
+      name  = "routes.web.hostname"
+      value = var.demo_fqdn
     },
     {
-      name  = "routes.backend.hostname"
-      value = var.backend_fqdn
-    },
-    {
-      name  = "routes.backend.path"
+      name  = "routes.web.path"
       value = "/"
+    },
+    {
+      name  = "routes.api.hostname"
+      value = var.demo_fqdn
+    },
+    {
+      name  = "routes.api.path"
+      value = "/api"
     }
   ]
 

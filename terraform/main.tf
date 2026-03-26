@@ -105,7 +105,7 @@ module "consul_gateway" {
   project_id             = var.project_id
   cert_email             = var.cert_email
   use_production_issuer  = var.use_production_issuer
-  cert_dns_names         = ["*.${local.consul_fqdn}", local.consul_fqdn]
+  cert_dns_names         = [local.demo_fqdn]
   consul_namespace       = module.consul.namespace
   cert_manager_namespace = module.cert_manager.namespace
   allowed_cidrs          = local.allowed_cidrs
@@ -113,21 +113,20 @@ module "consul_gateway" {
   depends_on = [module.consul, module.cert_manager]
 }
 
-# Deploy application services
+# Deploy demo application services
 module "consul_services" {
   source = "./modules/consul-services"
 
   deploy_services      = var.deploy_sample_services
-  services_namespace   = var.services_namespace
-  backend_enabled      = var.backend_enabled
-  backend_replicas     = var.backend_replicas
-  frontend_enabled     = var.frontend_enabled
-  frontend_replicas    = var.frontend_replicas
+  demo_namespace       = var.demo_namespace
+  api_enabled          = var.api_enabled
+  api_replicas         = var.api_replicas
+  web_enabled          = var.web_enabled
+  web_replicas         = var.web_replicas
   intentions_enabled   = var.intentions_enabled
   deploy_gateway       = var.deploy_api_gateway
   gateway_namespace    = module.consul.namespace
-  frontend_fqdn        = local.frontend_fqdn
-  backend_fqdn         = local.backend_fqdn
+  demo_fqdn            = local.demo_fqdn
   consul_namespace     = module.consul.namespace
   gateway_release_name = module.consul_gateway.gateway_release_name
 
@@ -144,7 +143,7 @@ resource "google_dns_record_set" "api_gateway" {
   rrdatas      = [module.consul_gateway.apigw_lb_address]
 }
 
-# Wildcard CNAME for all consul subdomains (frontend, backend, etc.) pointing to API Gateway
+# Wildcard CNAME for all consul subdomains (demo, etc.) pointing to API Gateway
 resource "google_dns_record_set" "consul_wildcard" {
   name         = "*.consul-${local.suffix}.${local.domain}."
   type         = "CNAME"
