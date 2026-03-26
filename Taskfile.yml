@@ -7,6 +7,8 @@ vars:
     sh: cd terraform && (terraform output -raw consul_namespace 2>/dev/null | grep . || echo "consul")
   CERT_MANAGER_NAMESPACE:
     sh: cd terraform && (terraform output -raw cert_manager_namespace 2>/dev/null | grep . || echo "cert-manager")
+  DEMO_NAMESPACE:
+    sh: cd terraform && (terraform output -raw demo_namespace 2>/dev/null | grep . || echo "demo")
 
 env:
   HELM_CACHE_HOME: "{{.PROJECT_ROOT}}/.tmp/helm/cache"
@@ -200,8 +202,8 @@ tasks:
       - echo "Deploying services and HTTPRoutes..."
       - terraform apply -target=module.consul_services.helm_release.consul_services -auto-approve
       - echo "Waiting for service pods to be ready..."
-      - kubectl wait --for=condition=ready pod -l app=backend -n default --timeout=120s || true
-      - kubectl wait --for=condition=ready pod -l app=frontend -n default --timeout=120s || true
+      - kubectl wait --for=condition=ready pod -l app=api -n {{.DEMO_NAMESPACE}} --timeout=120s || true
+      - kubectl wait --for=condition=ready pod -l app=web -n {{.DEMO_NAMESPACE}} --timeout=120s || true
       - echo "✓ Services and routes deployed"
 
   apply:helm-charts:verify:
@@ -214,7 +216,7 @@ tasks:
       - echo "Finalizing deployment..."
       - terraform apply -auto-approve
       - echo "Verifying HTTPRoutes..."
-      - kubectl get httproute -n default -o wide
+      - kubectl get httproute -n {{.DEMO_NAMESPACE}} -o wide
       - echo "Running comprehensive TLS verification..."
       - task: verify:gateway-tls
       - echo "✓ Deployment complete and verified"
@@ -249,30 +251,6 @@ tasks:
       - echo "✓ Cluster credentials configured"
       - kubectl cluster-info
 
-  deploy:services:
-    desc: Deploy sample backend and frontend services via Helm
-    silent: true
-    cmds:
-      - helm upgrade --install consul-services ./helm/consul-services --namespace default --create-namespace
-      - echo "✓ Services deployed via Helm"
-      - echo "Waiting for pods to be ready..."
-      - kubectl wait --for=condition=ready pod -l app=backend --timeout=300s || true
-      - kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s || true
-      - echo "✓ All pods are ready"
-
-  deploy:gateway:
-    desc: Deploy API Gateway, routes, and TLS via Helm
-    cmds:
-      - bash scripts/deploy-gateway.sh {{.CONSUL_NAMESPACE}}
-
-  deploy:all:
-    desc: Deploy all Kubernetes resources via Helm charts
-    prompt: "Deploy Sample Services and API Gateway via Helm?"
-    cmds:
-      - task: deploy:services
-      - task: deploy:gateway
-      - echo "✓ All resources deployed"
-
   status:
     desc: Show status of all components
     cmds:
@@ -284,27 +262,27 @@ tasks:
       - bash scripts/get-consul-token.sh {{.CONSUL_NAMESPACE}}
 
   ui:
-    desc: Open Frontend, Backend, and Consul UI in browser
+    desc: Open Web UI, API, and Consul UI in browser
     dir: terraform
     silent: true
     cmds:
       - |
-        FRONTEND_URL=$(terraform output -raw api_gateway_frontend_url 2>/dev/null || true)
-        BACKEND_URL=$(terraform output -raw api_gateway_backend_url 2>/dev/null || true)
+        WEB_URL=$(terraform output -raw demo_web_url 2>/dev/null || true)
+        API_URL=$(terraform output -raw demo_api_url 2>/dev/null || true)
         CONSUL_URL=$(terraform output -raw consul_url 2>/dev/null || true)
 
-        if [ -z "$FRONTEND_URL" ] || [ -z "$BACKEND_URL" ] || [ -z "$CONSUL_URL" ]; then
+        if [ -z "$WEB_URL" ] || [ -z "$API_URL" ] || [ -z "$CONSUL_URL" ]; then
           echo "Error: Unable to retrieve URLs from Terraform outputs."
           echo "Ensure infrastructure is deployed with 'task apply'."
           exit 1
         fi
 
         echo "Opening Consul UI at $CONSUL_URL"
-        open "$CONSUL_URL" || open "$CONSUL_URL" || echo "Please open $CONSUL_URL in your browser"
-        echo "Opening Frontend at $FRONTEND_URL"
-        open "$FRONTEND_URL" || open "$FRONTEND_URL" || echo "Please open $FRONTEND_URL in your browser"
-        echo "Opening Backend at $BACKEND_URL"
-        open "$BACKEND_URL" || open "$BACKEND_URL" || echo "Please open $BACKEND_URL in your browser"
+        open "$CONSUL_URL" || xdg-open "$CONSUL_URL" || echo "Please open $CONSUL_URL in your browser"
+        echo "Opening Web UI at $WEB_URL"
+        open "$WEB_URL" || xdg-open "$WEB_URL" || echo "Please open $WEB_URL in your browser"
+        echo "Opening API at $API_URL"
+        open "$API_URL" || xdg-open "$API_URL" || echo "Please open $API_URL in your browser"
 
   ui:consul:
     desc: Open Consul UI in browser
@@ -364,7 +342,7 @@ tasks:
   test:gateway:
     desc: Test API Gateway endpoints
     cmds:
-      - bash scripts/test-gateway.sh {{.CONSUL_NAMESPACE}}
+      - bash scripts/test-gateway.sh {{.CONSUL_NAMESPACE}} {{.DEMO_NAMESPACE}}
 
   verify:gateway-tls:
     desc: Verify API Gateway TLS certificate status and configuration
@@ -408,11 +386,12 @@ tasks:
     silent: true
     cmds:
       - helm uninstall consul-gateway -n {{.CONSUL_NAMESPACE}} || true
-      - helm uninstall consul-services -n default || true
+      - helm uninstall consul-services -n {{.DEMO_NAMESPACE}} || true
       - helm uninstall consul -n {{.CONSUL_NAMESPACE}} || true
       - helm uninstall cert-manager -n {{.CERT_MANAGER_NAMESPACE}} || true
       - kubectl delete pvc --all -n {{.CONSUL_NAMESPACE}} --wait=false || true
       - kubectl delete namespace {{.CONSUL_NAMESPACE}} --wait=false || true
+      - kubectl delete namespace {{.DEMO_NAMESPACE}} --wait=false || true
       - kubectl delete namespace {{.CERT_MANAGER_NAMESPACE}} --wait=false || true
       - echo "✓ Kubernetes resources, PVCs, and namespaces marked for deletion"
 

@@ -32,7 +32,7 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 
 ### 2. Kubernetes & Helm
 
-- **Namespace Isolation:** Deploy Consul to the `consul` namespace and application services to their respective namespaces (defaulting to `default` or `services`).
+- **Namespace Isolation:** Deploy Consul to the `consul` namespace and demo application services to the `demo` namespace.
 - **Terraform-Only Deployments:** ALL Kubernetes workloads and Helm charts MUST be deployed via Terraform modules. NEVER use `helm install` or `helm upgrade` commands directly.
 - **Helm Integration:** Helm charts in `helm/` directory are deployed exclusively through Terraform's `helm_release` resources in the `modules/consul-gateway/` and `modules/consul-services/` modules.
 - **Values Templating:** Use `terraform/templates/consul-values.yaml.tpl` for dynamic Consul configuration.
@@ -68,15 +68,12 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 | | task apply:helm-charts:services | Deploy sample services and HTTPRoutes |
 | | task apply:helm-charts:verify | Verify complete deployment and connectivity |
 | **Kubernetes** | task gke:credentials | Get GKE cluster credentials (configure kubectl) |
-| | `task deploy:services` | Deploy sample services (backend/frontend) via Helm |
-| | `task deploy:gateway` | Deploy API Gateway, routes, and TLS via Helm |
-| | `task deploy:all` | Deploy all sample services and API Gateway |
 | **Status & Ops** | `task status` | Show status of all components |
 | | `task consul:get-token` | Retrieve Consul bootstrap ACL token |
 | | `task consul:port-forward` | Port-forward Consul UI to localhost:8501 |
 | | `task gateway:get-ip` | Get API Gateway external IP |
 | | `task gateway:test` | Test API Gateway endpoints |
-| **UI Operations** | `task ui` | Open frontend, backend, and Consul UI in browser |
+| **UI Operations** | `task ui` | Open web, api, and Consul UI in browser |
 | | `task ui:consul` | Open Consul UI only |
 | | `task ui:gateway` | Open API Gateway URL |
 | **Logs** | `task consul:logs` | Show Consul server logs |
@@ -101,8 +98,8 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 ### Service Deployment
 
 1. Update Helm charts in `helm/`.
-2. Deploy using `task deploy:services` or `task deploy:gateway`.
-3. Test connectivity using `task gateway:test`.
+2. Deploy using `task apply:helm-charts` (Terraform-managed deployment).
+3. Test connectivity using `task test:gateway`.
 
 ## Neo4j Terraform Validation
 

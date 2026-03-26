@@ -1,16 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
-# Test API Gateway endpoints
+# Test API Gateway endpoints with demo namespace support
 
 CONSUL_NAMESPACE="${1:-consul}"
+DEMO_NAMESPACE="${2:-demo}"
 
 # Get the API Gateway service name
 GATEWAY_SVC=$(kubectl get svc -n "$CONSUL_NAMESPACE" -l component=api-gateway -o name | head -n 1 || true)
 
 if [ -z "$GATEWAY_SVC" ]; then
   echo "Error: API Gateway service not found in namespace $CONSUL_NAMESPACE."
-  echo "Make sure it's deployed using 'task deploy:gateway' or 'task apply:helm-charts'."
+  echo "Make sure it's deployed using 'task apply:helm-charts'."
   exit 1
 fi
 
@@ -23,42 +24,41 @@ if [ -z "$GATEWAY_IP" ]; then
   exit 1
 fi
 
-FRONTEND_FQDN=$(cd terraform && terraform output -raw api_gateway_frontend_url | sed 's|^https://||' | sed 's|/$||')
-BACKEND_FQDN=$(cd terraform && terraform output -raw api_gateway_backend_url | sed 's|^https://||' | sed 's|/$||')
+DEMO_FQDN=$(cd terraform && terraform output -raw demo_fqdn | sed 's|/$||')
 
 echo "Testing Gateway at: $GATEWAY_IP"
-echo "Frontend: $FRONTEND_FQDN"
-echo "Backend:  $BACKEND_FQDN"
+echo "Demo FQDN: $DEMO_FQDN"
+echo "Demo Namespace: $DEMO_NAMESPACE"
 echo ""
 
-echo "Testing HTTPS frontend:"
-echo "Command: curl -k -s -v --resolve \"$FRONTEND_FQDN:443:$GATEWAY_IP\" \"https://$FRONTEND_FQDN/\""
-FRONTEND_RESPONSE=$(curl -k -s -v --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/" 2>&1)
-echo "$FRONTEND_RESPONSE"
+echo "Testing HTTPS Web UI (root path):"
+echo "Command: curl -k -s -v --resolve \"$DEMO_FQDN:443:$GATEWAY_IP\" \"https://$DEMO_FQDN/\""
+WEB_RESPONSE=$(curl -k -s -v --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/" 2>&1)
+echo "$WEB_RESPONSE"
 echo ""
 
-# Extract and validate frontend HTTP status code
-FRONTEND_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/")
-if [[ "$FRONTEND_STATUS" -ge 200 && "$FRONTEND_STATUS" -lt 300 ]]; then
-  echo "✅ Frontend test passed (HTTP $FRONTEND_STATUS)"
+# Extract and validate web HTTP status code
+WEB_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/")
+if [[ "$WEB_STATUS" -ge 200 && "$WEB_STATUS" -lt 300 ]]; then
+  echo "✅ Web UI test passed (HTTP $WEB_STATUS)"
 else
-  echo "❌ Frontend test failed (HTTP $FRONTEND_STATUS)"
+  echo "❌ Web UI test failed (HTTP $WEB_STATUS)"
   exit 1
 fi
 echo ""
 
-echo "Testing HTTPS backend:"
-echo "Command: curl -k -s -v --resolve \"$BACKEND_FQDN:443:$GATEWAY_IP\" \"https://$BACKEND_FQDN/\""
-BACKEND_RESPONSE=$(curl -k -s -v --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/" 2>&1)
-echo "$BACKEND_RESPONSE"
+echo "Testing HTTPS API (/api path):"
+echo "Command: curl -k -s -v --resolve \"$DEMO_FQDN:443:$GATEWAY_IP\" \"https://$DEMO_FQDN/api\""
+API_RESPONSE=$(curl -k -s -v --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/api" 2>&1)
+echo "$API_RESPONSE"
 echo ""
 
-# Extract and validate backend HTTP status code
-BACKEND_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/")
-if [[ "$BACKEND_STATUS" -ge 200 && "$BACKEND_STATUS" -lt 300 ]]; then
-  echo "✅ Backend test passed (HTTP $BACKEND_STATUS)"
+# Extract and validate API HTTP status code
+API_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$DEMO_FQDN:443:$GATEWAY_IP" "https://$DEMO_FQDN/api")
+if [[ "$API_STATUS" -ge 200 && "$API_STATUS" -lt 300 ]]; then
+  echo "✅ API test passed (HTTP $API_STATUS)"
 else
-  echo "❌ Backend test failed (HTTP $BACKEND_STATUS)"
+  echo "❌ API test failed (HTTP $API_STATUS)"
   exit 1
 fi
 echo ""
