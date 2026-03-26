@@ -1,0 +1,2 @@
+{"id":"299c3bf5-d3c2-4e33-ba76-bc55b3b20ad7","ts":"2026-03-26T12:43:01.992Z","path":"/Users/narish.samplay/Projects/consul/terraform-gcp-consul-gke/helm/consul-gateway/templates/gateway.yaml","version":"1.0.0","taskID":"e9cec037-ca1b-4485-b3cb-1c1956eed12d"}
+{"id":"eea190df-e944-4f04-9c75-4164092d216b","ts":"2026-03-26T12:43:21.909Z","path":"/Users/narish.samplay/Projects/consul/terraform-gcp-consul-gke/scripts/wait-for-gateway-ready.sh","version":"1.0.0","taskID":"e9cec037-ca1b-4485-b3cb-1c1956eed12d"}
