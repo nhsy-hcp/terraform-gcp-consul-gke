@@ -19,6 +19,7 @@ gateway:
   https:
     enabled: true
     port: 443
+    hostname: "*.example.com"
     tlsSecretName: api-gateway-tls
     tlsMinVersion: "TLSv1_2"
 
@@ -34,16 +35,15 @@ tls:
 
   # ClusterIssuer configuration
   clusterIssuer:
+    email: admin@example.com
     staging:
       enabled: true
       name: letsencrypt-staging
-      email: admin@example.com
       server: https://acme-staging-v02.api.letsencrypt.org/directory
 
     production:
       enabled: true
       name: letsencrypt-prod
-      email: admin@example.com
       server: https://acme-v02.api.letsencrypt.org/directory
 
   # Certificate configuration

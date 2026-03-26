@@ -156,7 +156,8 @@ echo ""
 # 8. Check for recent cert-manager errors
 echo "8. Checking cert-manager logs for errors..."
 if [ -n "$CERT_MANAGER_POD" ]; then
-    ERROR_COUNT=$(kubectl logs "$CERT_MANAGER_POD" -n "$CERT_MANAGER_NAMESPACE" --tail=100 2>/dev/null | grep -c "^E" || echo "0")
+    ERROR_COUNT=$(kubectl logs "$CERT_MANAGER_POD" -n "$CERT_MANAGER_NAMESPACE" --tail=100 2>/dev/null | grep -c "^E" || true)
+    ERROR_COUNT=${ERROR_COUNT:-0}
 
     if [ "$ERROR_COUNT" -eq 0 ]; then
         check_pass "No errors in recent cert-manager logs"

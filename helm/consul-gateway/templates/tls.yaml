@@ -1,45 +1,26 @@
-{{ if .Values.tls.enabled }}
-{{ if .Values.tls.clusterIssuer.staging.enabled }}
+{{- range $type, $issuer := .Values.tls.clusterIssuer }}
+{{- if and (kindIs "map" $issuer) $issuer.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: {{ .Values.tls.clusterIssuer.staging.name }}
+  name: {{ $issuer.name }}
   labels:
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
 spec:
   acme:
-    server: {{ .Values.tls.clusterIssuer.staging.server }}
-    email: {{ .Values.tls.clusterIssuer.staging.email }}
+    server: {{ $issuer.server }}
+    email: {{ $.Values.tls.clusterIssuer.email }}
     privateKeySecretRef:
-      name: {{ .Values.tls.clusterIssuer.staging.name }}-account-key
+      name: {{ $issuer.name }}-account-key
     solvers:
-    - dns01:
-        cloudDNS:
-          project: {{ .Values.global.projectId }}
-{{ end }}
-{{ if .Values.tls.clusterIssuer.production.enabled }}
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: {{ .Values.tls.clusterIssuer.production.name }}
-  labels:
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
-spec:
-  acme:
-    server: {{ .Values.tls.clusterIssuer.production.server }}
-    email: {{ .Values.tls.clusterIssuer.production.email }}
-    privateKeySecretRef:
-      name: {{ .Values.tls.clusterIssuer.production.name }}-account-key
-    solvers:
-    - dns01:
-        cloudDNS:
-          project: {{ .Values.global.projectId }}
-{{ end }}
-{{ if .Values.tls.certificate.enabled }}
+      - dns01:
+          cloudDNS:
+            project: {{ $.Values.global.projectId }}
+{{- end }}
+{{- end }}
+
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -56,21 +37,15 @@ spec:
   isCA: false
   privateKey:
     algorithm: {{ .Values.tls.certificate.privateKey.algorithm }}
-    {{- if eq .Values.tls.certificate.privateKey.algorithm "RSA" }}
     size: {{ .Values.tls.certificate.privateKey.size }}
-    {{- else if eq .Values.tls.certificate.privateKey.algorithm "ECDSA" }}
-    size: {{ .Values.tls.certificate.privateKey.size }}
-    {{- end }}
     rotationPolicy: {{ .Values.tls.certificate.privateKey.rotationPolicy }}
   usages:
     - server auth
   dnsNames:
-    {{ range .Values.tls.certificate.dnsNames }}
+    {{- range .Values.tls.certificate.dnsNames }}
     - {{ . | quote }}
-    {{ end }}
+    {{- end }}
   issuerRef:
     name: {{ .Values.tls.certificate.issuerName }}
     kind: ClusterIssuer
     group: cert-manager.io
-{{ end }}
-{{ end }}
