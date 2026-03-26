@@ -14,7 +14,6 @@ metadata:
 spec:
   gatewayClassName: {{ .Values.gateway.gatewayClassName }}
   listeners:
-    {{- if .Values.gateway.https.enabled }}
     # HTTPS listener (TLS terminated here)
     - name: https
       protocol: HTTPS
@@ -30,4 +29,3 @@ spec:
             group: ""
         options:
           api-gateway.consul.hashicorp.com/tls_min_version: {{ .Values.gateway.https.tlsMinVersion | quote }}
-    {{- end }}

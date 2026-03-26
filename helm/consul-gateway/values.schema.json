@@ -54,12 +54,8 @@
         },
         "https": {
           "type": "object",
-          "required": ["enabled", "port", "tlsSecretName"],
+          "required": ["port", "tlsSecretName"],
           "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable HTTPS listener"
-            },
             "port": {
               "type": "integer",
               "minimum": 1,

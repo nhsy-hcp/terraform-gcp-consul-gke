@@ -17,7 +17,6 @@ gateway:
 
   # HTTPS listener (TLS termination)
   https:
-    enabled: true
     port: 443
     hostname: "*.example.com"
     tlsSecretName: api-gateway-tls
@@ -51,8 +50,8 @@ tls:
     enabled: true
     name: api-gateway-cert
     secretName: api-gateway-tls
-    duration: 2160h  # 90 days
-    renewBefore: 720h  # 30 days
+    duration: 168h  # 7 days
+    renewBefore: 120h  # 5 days
     dnsNames:
       - demo.example.com
     issuerName: letsencrypt-staging  # Use letsencrypt-prod after testing
