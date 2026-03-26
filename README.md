@@ -40,7 +40,7 @@ This deployment automatically provisions and creates:
 
 - GCP project with billing enabled
 - Container API enabled
-- Cloud DNS managed zone configured
+- Cloud DNS managed zone configured (domain is automatically derived from this zone)
 - IAM permissions to create GKE clusters and service accounts
 
 ## Quick Start
@@ -61,7 +61,6 @@ vim terraform/terraform.tfvars
 ```hcl
 project_id    = "your-gcp-project-id"
 dns_zone_name = "your-dns-zone-name"  # e.g., "example-com-zone"
-domain        = "app.example.com"
 cert_email    = "admin@example.com"
 ```
 
@@ -127,7 +126,6 @@ Edit `terraform/terraform.tfvars` (copy from `terraform.tfvars.example`):
 # === Required ===
 project_id    = "my-gcp-project"
 dns_zone_name = "example-com-zone"
-domain        = "app.example.com"
 cert_email    = "admin@example.com"
 
 # === Optional ===

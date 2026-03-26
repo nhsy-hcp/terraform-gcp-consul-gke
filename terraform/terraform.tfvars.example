@@ -6,6 +6,7 @@
 project_id = "my-gcp-project-id"
 
 # Name of your existing Cloud DNS managed zone (e.g., "example-com-zone")
+# The domain is automatically derived from this zone
 dns_zone_name = "my-dns-zone-name"
 
 # Email address for Let's Encrypt certificate notifications
@@ -14,9 +15,6 @@ cert_email = "admin@example.com"
 # ============================================================================
 # Optional: Cluster & Network (Commented out use defaults)
 # ============================================================================
-
-# Prefix for the API Gateway FQDN (default is "app" -> "app.example.com")
-# apigw_prefix = "app"
 
 # region              = "europe-west1"
 # cluster_name        = "consul-mesh"
