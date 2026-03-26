@@ -70,3 +70,18 @@ resource "helm_release" "cert_manager" {
     google_service_account_iam_member.cert_manager_workload_identity
   ]
 }
+
+# Wait for cert-manager controller deployment to be ready
+resource "null_resource" "wait_for_cert_manager" {
+  provisioner "local-exec" {
+    command     = "bash ${path.root}/../scripts/wait-for-cert-manager.sh ${kubernetes_namespace_v1.cert_manager.metadata[0].name}"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [helm_release.cert_manager]
+
+  triggers = {
+    # Re-run if cert-manager is recreated
+    cert_manager_release = helm_release.cert_manager.id
+  }
+}

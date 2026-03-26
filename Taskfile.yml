@@ -146,12 +146,6 @@ tasks:
     silent: true
     cmds:
       - terraform apply -target=module.cert_manager -auto-approve
-      - echo "Waiting for cert-manager deployment to be available..."
-      - kubectl wait --for=condition=available deployment/cert-manager -n {{.CERT_MANAGER_NAMESPACE}} --timeout={{.CERT_MANAGER_INIT_TIMEOUT}}s
-      - kubectl wait --for=condition=available deployment/cert-manager-webhook -n {{.CERT_MANAGER_NAMESPACE}} --timeout={{.CERT_MANAGER_INIT_TIMEOUT}}s
-      - kubectl wait --for=condition=available deployment/cert-manager-cainjector -n {{.CERT_MANAGER_NAMESPACE}} --timeout={{.CERT_MANAGER_INIT_TIMEOUT}}s
-      - echo "Waiting for cert-manager to initialize ACME client..."
-      - sleep 30
       - echo "✓ cert-manager deployed and initialized"
 
   validate:gateway-crds:
@@ -180,11 +174,9 @@ tasks:
     silent: true
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
-      - terraform apply -target=module.consul_gateway.helm_release.consul_gateway -auto-approve
+      - terraform apply -target=module.consul_gateway -auto-approve
       - echo "Waiting for TLS certificate to be issued (timeout {{.CERTIFICATE_TIMEOUT}}s)..."
       - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout={{.CERTIFICATE_TIMEOUT}}s
-      - bash {{.PROJECT_ROOT}}/scripts/wait-for-tls-secret.sh {{.CONSUL_NAMESPACE}} api-gateway-tls
-      - bash {{.PROJECT_ROOT}}/scripts/wait-for-gateway-ready.sh {{.CONSUL_NAMESPACE}} api-gateway {{.GATEWAY_TIMEOUT}}
       - echo "✓ Gateway and TLS certificate deployed and ready"
 
   apply:services:

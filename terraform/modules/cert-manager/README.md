@@ -12,6 +12,7 @@ No requirements.
 | <a name="provider_google"></a> [google](#provider\_google) | 7.24.0 |
 | <a name="provider_helm"></a> [helm](#provider\_helm) | 3.1.1 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 3.0.1 |
+| <a name="provider_null"></a> [null](#provider\_null) | 3.2.4 |
 
 ## Modules
 
@@ -27,6 +28,7 @@ No modules.
 | [helm_release.cert_manager](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
 | [kubernetes_namespace_v1.cert_manager](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_service_account_v1.cert_manager](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
+| [null_resource.wait_for_cert_manager](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 
 ## Inputs
 
@@ -43,6 +45,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cert_manager_ready"></a> [cert\_manager\_ready](#output\_cert\_manager\_ready) | Dependency anchor - cert-manager is fully deployed and ready |
 | <a name="output_chart_version"></a> [chart\_version](#output\_chart\_version) | cert-manager Helm chart version |
 | <a name="output_k8s_service_account_name"></a> [k8s\_service\_account\_name](#output\_k8s\_service\_account\_name) | Kubernetes service account name for cert-manager |
 | <a name="output_namespace"></a> [namespace](#output\_namespace) | Kubernetes namespace where cert-manager is deployed |

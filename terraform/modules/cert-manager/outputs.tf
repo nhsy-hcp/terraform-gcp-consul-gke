@@ -22,3 +22,8 @@ output "k8s_service_account_name" {
   description = "Kubernetes service account name for cert-manager"
   value       = kubernetes_service_account_v1.cert_manager.metadata[0].name
 }
+
+output "cert_manager_ready" {
+  description = "Dependency anchor - cert-manager is fully deployed and ready"
+  value       = null_resource.wait_for_cert_manager.id
+}

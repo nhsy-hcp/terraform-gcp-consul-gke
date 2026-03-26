@@ -2,12 +2,19 @@
 set -euo pipefail
 
 # Wait for Gateway listener to be programmed and certificate references resolved
+# Usage: wait-for-gateway-ready.sh [namespace] [gateway_name] [timeout_seconds]
 
 NAMESPACE="${1:-consul}"
 GATEWAY_NAME="${2:-api-gateway}"
 TIMEOUT="${3:-600}"
 
-echo "Waiting for Gateway listener to be programmed (timeout ${TIMEOUT}s)..."
+echo "=========================================="
+echo "Waiting for Gateway to be Ready"
+echo "=========================================="
+echo "Namespace: $NAMESPACE"
+echo "Gateway: $GATEWAY_NAME"
+echo "Timeout: ${TIMEOUT}s"
+echo ""
 
 ELAPSED=0
 INTERVAL=10
@@ -19,14 +26,35 @@ while [ $ELAPSED -lt "$TIMEOUT" ]; do
 
   if [ "$GATEWAY_PROGRAMMED" = "True" ] && [ "$LISTENER_ACCEPTED" = "True" ]; then
     echo "✓ Gateway programmed and listener accepted"
+    echo "✓ Gateway: $GATEWAY_NAME"
+    echo ""
+    echo "Gateway is ready for HTTPRoute attachments"
     exit 0
   fi
 
-  echo "Gateway status - Programmed: $GATEWAY_PROGRAMMED, Listener Accepted: $LISTENER_ACCEPTED (${ELAPSED}s/${TIMEOUT}s)"
+  # Show progress every 30 seconds
+  if [ $((ELAPSED % 30)) -eq 0 ]; then
+    echo "⏳ Gateway status - Programmed: $GATEWAY_PROGRAMMED, Listener Accepted: $LISTENER_ACCEPTED (${ELAPSED}s/${TIMEOUT}s)"
+  fi
+
   sleep $INTERVAL
   ELAPSED=$((ELAPSED + INTERVAL))
 done
 
-echo "⚠ Warning: Gateway listener not fully ready after ${TIMEOUT}s"
-kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" -o yaml
+echo ""
+echo "=========================================="
+echo "ERROR: Timeout waiting for Gateway readiness"
+echo "=========================================="
+echo "Gateway: $GATEWAY_NAME"
+echo "Namespace: $NAMESPACE"
+echo "Elapsed: ${TIMEOUT}s"
+echo ""
+echo "Gateway Status:"
+kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" -o yaml 2>/dev/null || echo "  (unable to retrieve)"
+echo ""
+echo "Troubleshooting:"
+echo "1. Check gateway status: kubectl get gateway $GATEWAY_NAME -n $NAMESPACE"
+echo "2. Check gateway events: kubectl describe gateway $GATEWAY_NAME -n $NAMESPACE"
+echo "3. Check TLS certificate: kubectl get certificate -n $NAMESPACE"
+echo "4. Check Consul API Gateway logs: kubectl logs -n $NAMESPACE -l component=api-gateway"
 exit 1

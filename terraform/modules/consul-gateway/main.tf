@@ -70,6 +70,47 @@ resource "null_resource" "wait_for_lb_ip" {
   }
 }
 
+# Wait for TLS secret to be populated with certificate data
+resource "null_resource" "wait_for_tls_secret" {
+  count = var.deploy_gateway ? 1 : 0
+
+  provisioner "local-exec" {
+    command     = "bash ${path.root}/../scripts/wait-for-tls-secret.sh ${var.gateway_namespace} api-gateway-tls"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [
+    helm_release.consul_gateway,
+    null_resource.wait_for_lb_ip
+  ]
+
+  triggers = {
+    # Re-run if gateway is recreated
+    gateway_release = var.deploy_gateway ? helm_release.consul_gateway[0].id : ""
+  }
+}
+
+# Wait for Gateway to be programmed and listener to be accepted
+resource "null_resource" "wait_for_gateway_ready" {
+  count = var.deploy_gateway ? 1 : 0
+
+  provisioner "local-exec" {
+    command     = "bash ${path.root}/../scripts/wait-for-gateway-ready.sh ${var.gateway_namespace} api-gateway 600"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [
+    helm_release.consul_gateway,
+    null_resource.wait_for_lb_ip,
+    null_resource.wait_for_tls_secret
+  ]
+
+  triggers = {
+    # Re-run if gateway is recreated
+    gateway_release = var.deploy_gateway ? helm_release.consul_gateway[0].id : ""
+  }
+}
+
 # Data source to fetch the external IP of the API Gateway service
 data "kubernetes_service_v1" "api_gateway" {
   count = var.deploy_gateway ? 1 : 0
@@ -79,6 +120,8 @@ data "kubernetes_service_v1" "api_gateway" {
   }
   depends_on = [
     helm_release.consul_gateway,
-    null_resource.wait_for_lb_ip
+    null_resource.wait_for_lb_ip,
+    null_resource.wait_for_tls_secret,
+    null_resource.wait_for_gateway_ready
   ]
 }

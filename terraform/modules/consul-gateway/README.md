@@ -43,7 +43,9 @@ No modules.
 | Name | Type |
 |------|------|
 | [helm_release.consul_gateway](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
+| [null_resource.wait_for_gateway_ready](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.wait_for_lb_ip](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [null_resource.wait_for_tls_secret](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [kubernetes_service_v1.api_gateway](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/service_v1) | data source |
 
 ## Inputs
