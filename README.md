@@ -73,36 +73,14 @@ task init
 task apply
 ```
 
-**Deployment Process:**
+The deployment runs in 5 stages with automatic validation:
+1. Prerequisites (VPC, APIs)
+2. GKE Cluster
+3. Consul Service Mesh
+4. cert-manager
+5. Application Helm Charts (Gateway + Services)
 
-The `task apply` command performs a **staged deployment** with automatic validation:
-
-1. **Prerequisites**: VPC, APIs, networking
-2. **GKE Cluster**: Regional cluster with Workload Identity
-3. **Consul Service Mesh**: 3-node HA cluster with Connect
-4. **cert-manager**: Automated TLS certificate management
-5. **Application Helm Charts** (staged):
-   - **Gateway API CRDs**: Auto-installed if missing (HTTPRoute, Gateway, etc.)
-   - **Services**: Backend and frontend deployed first
-   - **API Gateway**: Deployed after services are ready
-   - **LoadBalancer IP Wait**: Terraform automatically waits up to 120s for GCP to assign external IP
-   - **Verification**: TLS certificate validation
-
-Each stage includes confirmation prompts. Use `task apply -- --yes` to skip prompts for CI/CD.
-
-**Deployment Wait Conditions:**
-
-The deployment includes intelligent wait conditions to ensure full resource reconciliation:
-
-| Stage | Wait Condition | Timeout | Purpose |
-|-------|---------------|---------|---------|
-| cert-manager | Deployments available + ACME init | 120s + 30s | Ensures ACME client ready for certificate issuance |
-| Gateway | Certificate ready + Secret data | 300s | Verifies TLS certificate issued and secret populated |
-| Gateway | Listener programmed + Refs resolved | 600s | Ensures Gateway controller reconciled configuration |
-| Services | LoadBalancer IP + DNS propagation | 300s + 30s | Waits for external IP assignment and DNS updates |
-| Verification | Final reconciliation buffer | 60s | Allows all controllers to observe and react to changes |
-
-These wait conditions eliminate race conditions and ensure `task apply --yes` completes successfully without manual intervention.
+Use `task apply -- --yes` to skip confirmation prompts.
 
 ### 3. Verify Deployment
 
@@ -129,49 +107,14 @@ task gateway:test
 ## Project Structure
 
 ```
-.
-├── terraform/                          # Terraform infrastructure
-│   ├── main.tf                        # Main configuration with modules
-│   ├── variables.tf                   # Variable definitions
-│   ├── outputs.tf                     # Output values
-│   ├── terraform.tfvars.example       # Example configuration
-│   ├── modules/                       # Terraform modules
-│   │   ├── prereqs/                   # VPC, APIs, and prerequisites
-│   │   ├── gke/                       # GKE cluster
-│   │   ├── consul/                    # Consul Helm deployment
-│   │   ├── cert-manager/              # cert-manager with Workload Identity
-│   │   └── helm-charts/               # Services and gateway deployment
-│   └── templates/
-│       └── consul-values.yaml.tpl     # Consul Helm values template
-├── helm/                              # Local Helm charts
-│   ├── consul-services/               # Backend and frontend services
-│   │   ├── Chart.yaml
-│   │   ├── values.yaml
-│   │   └── templates/
-│   │       ├── backend.yaml
-│   │       ├── frontend.yaml
-│   │       ├── intentions.yaml
-│   │       └── servicedefaults.yaml
-│   └── consul-gateway/                # API Gateway with TLS
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       └── templates/
-│           ├── gateway.yaml
-│           ├── routes.yaml
-│           └── tls.yaml
-├── scripts/                           # Utility scripts
-│   ├── deploy-gateway.sh
-│   ├── get-consul-token.sh
-│   ├── show-status.sh
-│   ├── test-gateway.sh
-│   ├── verify-workload-identity.sh
-│   └── wait-for-lb-ip.sh
-├── Taskfile.yml                       # Task automation
-├── AGENTS.md                          # AI agent guidelines
-├── README.md                          # This file
-├── docs/                              # Documentation
-│   └── ARCHITECTURE.md                # Detailed architecture docs
-└── LICENSE                            # Apache 2.0 license
+terraform/          # Infrastructure as code
+  modules/          # Reusable Terraform modules
+  templates/        # Configuration templates
+helm/               # Local Helm charts
+  consul-services/  # Sample services
+  consul-gateway/   # API Gateway with TLS
+scripts/            # Utility scripts
+Taskfile.yml        # Task automation
 ```
 
 ## Configuration
@@ -207,174 +150,55 @@ All infrastructure and services are deployed via Terraform modules. Customize by
 
 ## Common Tasks
 
-### Using Task Runner
-
 ```bash
-# Show all available tasks
-task --list
-
-# Infrastructure management
-task init          # Initialize Terraform
-task plan          # Show execution plan
-task apply         # Apply infrastructure changes (staged deployment)
-task destroy       # Destroy all infrastructure
-
-# Operations
-task status               # Show status of all components
-task gateway:ip           # Get API Gateway external IP
-task gateway:test         # Test gateway endpoints
-task verify:gateway-tls   # Verify API Gateway TLS certificate status
-task recreate:certificate # Force recreation of API Gateway TLS certificate
-
-# Consul operations
-task consul:token         # Get bootstrap ACL token
-task consul:port-forward  # Access Consul UI locally
-task consul:logs          # View Consul server logs
-
-# UI operations (open in browser)
-task ui                # Open frontend, backend, and Consul UI
-task ui:consul         # Open Consul UI only
-task ui:gateway        # Open API Gateway URL
-
-# Logs
-task cert-manager:logs # View cert-manager logs
-
-# Cleanup
-task uninstall         # Uninstall all Helm releases and namespaces
-task clean             # Clean local Terraform cache and temp files
+task --list            # Show all tasks
+task init              # Initialize Terraform
+task apply             # Deploy infrastructure (staged)
+task status            # Check component status
+task gateway:test      # Test gateway endpoints
+task consul:token      # Get Consul ACL token
+task ui                # Open UIs in browser
+task destroy           # Destroy infrastructure
 ```
 
-## Security
+## Production Certificates
 
-### Switching to Production Certificates
-
-After testing with staging certificates, update `terraform/terraform.tfvars`:
+Switch from staging to production Let's Encrypt:
 
 ```hcl
+# terraform/terraform.tfvars
 use_production_issuer = true
 ```
 
-Then apply the change:
-
-```bash
-task apply
-```
+Then: `task apply`
 
 ## Troubleshooting
 
-### Certificate Issues
+### Quick Diagnostics
 
 ```bash
-# Run comprehensive TLS verification (recommended first step)
-task verify:gateway-tls
-
-# Check certificate status
-kubectl get certificate -n consul
-kubectl describe certificate api-gateway-cert -n consul
-
-# Check ACME challenges
-kubectl get challenges -n consul
-kubectl describe challenge <challenge-name> -n consul
-
-# Verify DNS propagation
-dig TXT _acme-challenge.app.example.com
-
-# Check cert-manager logs
-task cert-manager:logs
-
-# Verify Workload Identity configuration
-task workload-identity:verify
+# Verify all components
+task verify:gateway-tls    # TLS certificate status
+task status                # All component status
+task cert-manager:logs     # cert-manager logs
 ```
 
-**Common Certificate Issues:**
+### Common Issues
 
-1. **DNS-01 Challenge Failures (SERVFAIL)**
-   - Verify Cloud DNS zone exists and is accessible
-   - Check cert-manager service account has `roles/dns.admin` permission
-   - Verify Workload Identity binding: `task workload-identity:verify`
+**Certificate Problems:**
+- DNS-01 failures: Verify Cloud DNS zone and cert-manager service account permissions
+- Certificate stuck: Use `task recreate:certificate` to force recreation
+- Workload Identity: Run `task workload-identity:verify`
 
-2. **Certificate Not Ready**
-   - Run `task verify:gateway-tls` for detailed diagnostics
-   - Check ClusterIssuer status: `kubectl get clusterissuer`
-   - Review cert-manager logs: `task cert-manager:logs`
+**Gateway Issues:**
+- Gateway not programmed: Check `kubectl describe gateway api-gateway -n consul`
+- Missing CRDs: Run `task validate:gateway-crds`
+- View logs: `kubectl logs -n consul -l component=api-gateway`
 
-3. **Gateway Listener Not Programmed**
-   - Verify TLS secret exists: `kubectl get secret api-gateway-tls -n consul`
-   - Check Gateway status: `kubectl describe gateway api-gateway -n consul`
-   - Certificate must be ready before Gateway listener can be programmed
-
-4. **InvalidCertificateRef Warning (Non-Blocking)**
-   - **Symptom**: Gateway shows `InvalidCertificateRef` with message "certificate is invalid or does not contain a supported server name"
-   - **Cause**: Gateway listener missing hostname field (known limitation)
-   - **Impact**: Warning only - Gateway functions normally, TLS termination works correctly
-   - **Verification**: Certificate SANs include wildcard domain, Gateway accepts all traffic
-   - **Status**: This is a known cosmetic issue and does not affect functionality
-
-**Force Certificate Recreation:**
-
-If the certificate is stuck or has persistent issues, you can force a recreation:
-
-```bash
-# Delete and recreate the certificate (with confirmation prompt)
-task recreate:certificate
-
-# Monitor the new certificate issuance
-task verify:gateway-tls
-
-# Watch cert-manager logs in real-time
-task cert-manager:logs
-```
-
-This will:
-1. Delete the existing Certificate, CertificateRequest, Challenges, and TLS secret
-2. Trigger Terraform to recreate the certificate via the helm-charts module
-3. Start a fresh ACME challenge process
-
-### Service Mesh Issues
-
-```bash
-# Check sidecar injection
-kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].name}{"\n"}{end}'
-
-# Check service intentions
-kubectl get serviceintentions
-
-# View sidecar logs
-kubectl logs <pod-name> -c consul-dataplane
-
-# Check connect-inject logs
-kubectl logs -n consul -l component=connect-injector
-```
-
-### Gateway Issues
-
-```bash
-# Check gateway status
-kubectl get gateway api-gateway -n consul
-kubectl describe gateway api-gateway -n consul
-
-# Check routes
-kubectl get httproute -A
-
-# View gateway logs
-kubectl logs -n consul -l component=api-gateway
-
-# Verify Gateway API CRDs are installed
-kubectl get crd | grep gateway.networking.k8s.io
-```
-
-**Gateway API CRDs:**
-
-The deployment automatically installs required Gateway API CRDs (Gateway, HTTPRoute, ReferenceGrant) if they are missing. This is handled by the `validate:gateway-crds` task which runs before helm chart deployment.
-
-If you encounter CRD-related errors:
-```bash
-# Manually verify and install CRDs
-task validate:gateway-crds
-
-# Check installed CRDs
-kubectl get crd | grep gateway
-```
+**Service Mesh:**
+- Check sidecar injection: `kubectl get pods -o wide`
+- View intentions: `kubectl get serviceintentions`
+- Sidecar logs: `kubectl logs <pod> -c consul-dataplane`
 
 ## Documentation
 

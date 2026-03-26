@@ -32,13 +32,15 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 
 ### 2. Kubernetes & Helm
 
-- **Namespace Isolation:** Deploy Consul to the `consul` namespace and demo application services to the `demo` namespace.
+- **Namespace Isolation:** Deploy Consul to the `consul` namespace and application services to their respective namespaces (defaulting to `default` or `services`).
 - **Terraform-Only Deployments:** ALL Kubernetes workloads and Helm charts MUST be deployed via Terraform modules. NEVER use `helm install` or `helm upgrade` commands directly.
 - **Helm Integration:** Helm charts in `helm/` directory are deployed exclusively through Terraform's `helm_release` resources in the `modules/consul-gateway/` and `modules/consul-services/` modules.
 - **Values Templating:** Use `terraform/templates/consul-values.yaml.tpl` for dynamic Consul configuration.
 - **Validation:** Always validate `consul-values.yaml.tpl` against the schema [official Consul Helm chart values.yaml](https://github.com/hashicorp/consul-helm/blob/master/values.yaml)
   to ensure structure and compatibility.
+- **Gateway Configuration:** Gateway HTTPS listener does not specify hostname constraints, allowing HTTPRoutes to define their own hostnames without certificate validation conflicts. The `gateway.https.enabled` field has been removed as HTTPS is always enabled.
 - **LoadBalancer IP Wait:** The `consul-gateway` module includes a `null_resource` that automatically waits up to 120 seconds for GCP to assign a LoadBalancer external IP. This ensures the `apigw_lb_address` output is always populated on successful deployment, eliminating race conditions. The wait is triggered via `scripts/wait-for-lb-ip.sh` and re-runs only when the gateway Helm release is recreated.
+- **Gateway Validation:** The `wait-for-gateway-ready.sh` script checks Gateway-level `Programmed` status (not listener-level) to determine deployment success, as listener-level status may show warnings that don't affect functionality.
 
 ### 3. Security & Identity
 
