@@ -4,13 +4,13 @@
 
 # Global settings
 global:
-  namespace: default
+  namespace: demo
   consulNamespace: consul
 
-# Backend service configuration
-backend:
+# API service configuration (renamed from backend)
+api:
   enabled: true
-  name: backend
+  name: api
   replicas: 2
   image:
     repository: hashicorp/http-echo
@@ -23,7 +23,7 @@ backend:
 
   container:
     port: 9090
-    message: "Hello from the backend service!"
+    message: "Hello from the API service!"
 
   resources:
     requests:
@@ -38,10 +38,10 @@ backend:
     connect:
       enabled: true
 
-# Frontend service configuration
-frontend:
+# Web service configuration (renamed from frontend)
+web:
   enabled: true
-  name: frontend
+  name: web
   replicas: 2
   image:
     repository: hashicorp/http-echo
@@ -54,7 +54,7 @@ frontend:
 
   container:
     port: 9090
-    message: "Hello from the frontend!"
+    message: "Hello from the Web UI!"
 
   resources:
     requests:
@@ -69,28 +69,28 @@ frontend:
     connect:
       enabled: true
     upstreams:
-      - name: backend
+      - name: api
         port: 9091
 
   # Environment variables
   env:
-    - name: BACKEND_URL
+    - name: API_URL
       value: "http://localhost:9091"
 
 # Service Intentions
 intentions:
   enabled: true
   rules:
-    # Allow frontend and api-gateway -> backend
-    - destination: backend
+    # Allow web and api-gateway -> api
+    - destination: api
       sources:
-        - name: frontend
+        - name: web
           action: allow
         - name: api-gateway
           action: allow
 
-    # Allow api-gateway -> frontend
-    - destination: frontend
+    # Allow api-gateway -> web
+    - destination: web
       sources:
         - name: api-gateway
           action: allow
@@ -104,16 +104,16 @@ routes:
     name: api-gateway
     namespace: consul
 
-  # Frontend route
-  frontend:
+  # Web route (root path)
+  web:
     enabled: true
-    name: frontend-route
-    hostname: app.example.com
+    name: web-route
+    hostname: demo.example.com
     path: /
 
-  # Backend route
-  backend:
+  # API route (/api path)
+  api:
     enabled: true
-    name: backend-route
-    hostname: app.example.com
-    path: /
+    name: api-route
+    hostname: demo.example.com
+    path: /api

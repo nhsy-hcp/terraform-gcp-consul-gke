@@ -1,0 +1,435 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Consul Services Helm Chart Values",
+  "description": "Schema for consul-services Helm chart values.yaml",
+  "type": "object",
+  "required": ["global", "api", "web"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["namespace", "consulNamespace"],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Kubernetes namespace for demo services"
+        },
+        "consulNamespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Consul namespace"
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "required": ["enabled", "name", "replicas"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable API service deployment"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name of the API service"
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of API service replicas"
+        },
+        "image": {
+          "type": "object",
+          "required": ["repository", "tag"],
+          "properties": {
+            "repository": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Container image repository"
+            },
+            "tag": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Container image tag"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": ["Always", "IfNotPresent", "Never"],
+              "description": "Image pull policy"
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Service port"
+            },
+            "targetPort": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Container target port"
+            }
+          }
+        },
+        "container": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Container listening port"
+            },
+            "message": {
+              "type": "string",
+              "description": "Message to display from the service"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "properties": {
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$",
+                  "description": "Memory request"
+                },
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+m$",
+                  "description": "CPU request"
+                }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$",
+                  "description": "Memory limit"
+                },
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+m$",
+                  "description": "CPU limit"
+                }
+              }
+            }
+          }
+        },
+        "consul": {
+          "type": "object",
+          "properties": {
+            "connect": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Consul Connect sidecar injection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "web": {
+      "type": "object",
+      "required": ["enabled", "name", "replicas"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Web service deployment"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name of the Web service"
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of Web service replicas"
+        },
+        "image": {
+          "type": "object",
+          "required": ["repository", "tag"],
+          "properties": {
+            "repository": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Container image repository"
+            },
+            "tag": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Container image tag"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": ["Always", "IfNotPresent", "Never"],
+              "description": "Image pull policy"
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Service port"
+            },
+            "targetPort": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Container target port"
+            }
+          }
+        },
+        "container": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Container listening port"
+            },
+            "message": {
+              "type": "string",
+              "description": "Message to display from the service"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "properties": {
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$",
+                  "description": "Memory request"
+                },
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+m$",
+                  "description": "CPU request"
+                }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$",
+                  "description": "Memory limit"
+                },
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+m$",
+                  "description": "CPU limit"
+                }
+              }
+            }
+          }
+        },
+        "consul": {
+          "type": "object",
+          "properties": {
+            "connect": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Consul Connect sidecar injection"
+                }
+              }
+            },
+            "upstreams": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "port"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Upstream service name"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535,
+                    "description": "Local port for upstream"
+                  }
+                }
+              },
+              "description": "Consul Connect upstream services"
+            }
+          }
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Environment variable name"
+              },
+              "value": {
+                "type": "string",
+                "description": "Environment variable value"
+              }
+            }
+          },
+          "description": "Environment variables for the container"
+        }
+      }
+    },
+    "intentions": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable service intentions"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["destination", "sources"],
+            "properties": {
+              "destination": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Destination service name"
+              },
+              "sources": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["name", "action"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Source service name"
+                    },
+                    "namespace": {
+                      "type": "string",
+                      "description": "Source service namespace"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": ["allow", "deny"],
+                      "description": "Intention action"
+                    }
+                  }
+                },
+                "description": "List of source services"
+              }
+            }
+          },
+          "description": "Service intention rules"
+        }
+      }
+    },
+    "routes": {
+      "type": "object",
+      "required": ["enabled", "gateway"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable HTTP routes"
+        },
+        "gateway": {
+          "type": "object",
+          "required": ["name", "namespace"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Gateway name"
+            },
+            "namespace": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Gateway namespace"
+            }
+          }
+        },
+        "web": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable web route"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Route name"
+            },
+            "hostname": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Route hostname"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/",
+              "description": "Route path prefix"
+            }
+          }
+        },
+        "api": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable API route"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Route name"
+            },
+            "hostname": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Route hostname"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/",
+              "description": "Route path prefix"
+            }
+          }
+        }
+      }
+    }
+  }
+}

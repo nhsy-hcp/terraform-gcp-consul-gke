@@ -1,0 +1,73 @@
+{{- if .Values.web.enabled }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.web.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.web.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.web.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.web.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    app: {{ .Values.web.name }}
+  ports:
+    - name: http
+      port: {{ .Values.web.service.port }}
+      targetPort: {{ .Values.web.service.targetPort }}
+      appProtocol: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.web.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.web.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.web.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.web.name }}
+      annotations:
+        {{- if .Values.web.consul.connect.enabled }}
+        consul.hashicorp.com/connect-inject: "true"
+        {{- end }}
+        {{- if .Values.web.consul.upstreams }}
+        consul.hashicorp.com/connect-service-upstreams: {{ range $i, $upstream := .Values.web.consul.upstreams }}{{if $i}},{{end}}"{{ $upstream.name }}:{{ $upstream.port }}"{{ end }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.web.name }}
+      containers:
+        - name: {{ .Values.web.name }}
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          args:
+            - -text={{ .Values.web.container.message }}
+            - -listen=:{{ .Values.web.container.port }}
+          ports:
+            - containerPort: {{ .Values.web.container.port }}
+          {{- if .Values.web.env }}
+          env:
+            {{- toYaml .Values.web.env | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+{{- end }}

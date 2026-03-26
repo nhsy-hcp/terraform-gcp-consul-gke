@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Consul Gateway Helm Chart Values",
+  "description": "Schema for consul-gateway Helm chart values.yaml",
+  "type": "object",
+  "required": ["global", "gateway", "tls"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["namespace", "domain", "projectId"],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Kubernetes namespace for the gateway"
+        },
+        "domain": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$",
+          "description": "Base domain for DNS records"
+        },
+        "projectId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GCP project ID"
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "required": ["enabled", "name", "gatewayClassName"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable API Gateway deployment"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name of the Gateway resource"
+        },
+        "gatewayClassName": {
+          "type": "string",
+          "enum": ["consul"],
+          "description": "Gateway class name (must be 'consul')"
+        },
+        "loadBalancerSourceRanges": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9./]+$"
+          },
+          "description": "CIDR ranges allowed to access the LoadBalancer"
+        },
+        "https": {
+          "type": "object",
+          "required": ["enabled", "port", "tlsSecretName"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable HTTPS listener"
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "HTTPS port number"
+            },
+            "hostname": {
+              "type": "string",
+              "description": "Hostname pattern for HTTPS listener"
+            },
+            "tlsSecretName": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name of the TLS secret"
+            },
+            "tlsMinVersion": {
+              "type": "string",
+              "enum": ["TLSv1_2", "TLSv1_3"],
+              "description": "Minimum TLS version"
+            }
+          }
+        }
+      }
+    },
+    "referenceGrant": {
+      "type": "object",
+      "required": ["enabled", "name", "targetNamespace"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable ReferenceGrant for cross-namespace routing"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name of the ReferenceGrant"
+        },
+        "targetNamespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Target namespace for cross-namespace references"
+        }
+      }
+    },
+    "tls": {
+      "type": "object",
+      "required": ["enabled", "clusterIssuer", "certificate"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable TLS certificate management"
+        },
+        "clusterIssuer": {
+          "type": "object",
+          "required": ["email"],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Email for Let's Encrypt notifications"
+            },
+            "staging": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Let's Encrypt staging issuer"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the staging ClusterIssuer"
+                },
+                "server": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "ACME server URL for staging"
+                }
+              }
+            },
+            "production": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Let's Encrypt production issuer"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the production ClusterIssuer"
+                },
+                "server": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "ACME server URL for production"
+                }
+              }
+            }
+          }
+        },
+        "certificate": {
+          "type": "object",
+          "required": ["name", "secretName", "dnsNames", "issuerName"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable certificate creation"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name of the Certificate resource"
+            },
+            "secretName": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name of the secret to store the certificate"
+            },
+            "duration": {
+              "type": "string",
+              "pattern": "^[0-9]+h$",
+              "description": "Certificate duration (e.g., '2160h' for 90 days)"
+            },
+            "renewBefore": {
+              "type": "string",
+              "pattern": "^[0-9]+h$",
+              "description": "Renew certificate before expiry (e.g., '720h' for 30 days)"
+            },
+            "dnsNames": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "DNS names for the certificate"
+            },
+            "issuerName": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name of the ClusterIssuer to use"
+            },
+            "privateKey": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "type": "string",
+                  "enum": ["RSA", "ECDSA"],
+                  "description": "Private key algorithm"
+                },
+                "size": {
+                  "type": "integer",
+                  "enum": [256, 384, 2048, 4096],
+                  "description": "Key size (256/384 for ECDSA, 2048/4096 for RSA)"
+                },
+                "rotationPolicy": {
+                  "type": "string",
+                  "enum": ["Always", "Never"],
+                  "description": "Private key rotation policy"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -27,7 +27,7 @@ gateway:
 referenceGrant:
   enabled: true
   name: allow-gateway-to-services
-  targetNamespace: default
+  targetNamespace: demo
 
 # TLS/Certificate configuration
 tls:
@@ -54,8 +54,7 @@ tls:
     duration: 2160h  # 90 days
     renewBefore: 720h  # 30 days
     dnsNames:
-      - app.example.com
-      - "*.app.example.com"
+      - demo.example.com
     issuerName: letsencrypt-staging  # Use letsencrypt-prod after testing
 
     # Private key configuration

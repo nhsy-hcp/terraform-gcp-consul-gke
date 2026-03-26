@@ -1,20 +1,20 @@
-{{- if .Values.frontend.enabled }}
+{{- if .Values.web.enabled }}
 ---
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: ServiceDefaults
 metadata:
-  name: {{ .Values.frontend.name }}
+  name: {{ .Values.web.name }}
   namespace: {{ .Values.global.namespace }}
 spec:
   protocol: http
 {{- end }}
 
-{{- if .Values.backend.enabled }}
+{{- if .Values.api.enabled }}
 ---
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: ServiceDefaults
 metadata:
-  name: {{ .Values.backend.name }}
+  name: {{ .Values.api.name }}
   namespace: {{ .Values.global.namespace }}
 spec:
   protocol: http
