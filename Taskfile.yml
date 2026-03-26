@@ -9,6 +9,12 @@ vars:
     sh: cd terraform && (terraform output -raw cert_manager_namespace 2>/dev/null | grep . || echo "cert-manager")
   DEMO_NAMESPACE:
     sh: cd terraform && (terraform output -raw demo_namespace 2>/dev/null | grep . || echo "demo")
+  # Timeout values for wait conditions (in seconds)
+  CERT_MANAGER_INIT_TIMEOUT: "120"
+  CERTIFICATE_TIMEOUT: "300"
+  GATEWAY_TIMEOUT: "600"
+  LOADBALANCER_TIMEOUT: "300"
+  RECONCILIATION_BUFFER: "60"
 
 env:
   HELM_CACHE_HOME: "{{.PROJECT_ROOT}}/.tmp/helm/cache"
@@ -137,34 +143,22 @@ tasks:
     dir: terraform
     deps:
       - terraform:check-vars
+    silent: true
     cmds:
       - terraform apply -target=module.cert_manager -auto-approve
+      - echo "Waiting for cert-manager deployment to be available..."
+      - kubectl wait --for=condition=available deployment/cert-manager -n {{.CERT_MANAGER_NAMESPACE}} --timeout={{.CERT_MANAGER_INIT_TIMEOUT}}s
+      - kubectl wait --for=condition=available deployment/cert-manager-webhook -n {{.CERT_MANAGER_NAMESPACE}} --timeout={{.CERT_MANAGER_INIT_TIMEOUT}}s
+      - kubectl wait --for=condition=available deployment/cert-manager-cainjector -n {{.CERT_MANAGER_NAMESPACE}} --timeout={{.CERT_MANAGER_INIT_TIMEOUT}}s
+      - echo "Waiting for cert-manager to initialize ACME client..."
+      - sleep 30
+      - echo "✓ cert-manager deployed and initialized"
 
   validate:gateway-crds:
     desc: Verify Gateway API CRDs are installed
     silent: true
     cmds:
-      - |
-        echo "Checking for required Gateway API CRDs..."
-        MISSING_CRDS=""
-
-        for CRD in gateways.gateway.networking.k8s.io \
-                   gatewayclasses.gateway.networking.k8s.io \
-                   httproutes.gateway.networking.k8s.io \
-                   referencegrants.gateway.networking.k8s.io; do
-          if ! kubectl get crd "$CRD" &>/dev/null; then
-            MISSING_CRDS="$MISSING_CRDS $CRD"
-          fi
-        done
-
-        if [ -n "$MISSING_CRDS" ]; then
-          echo "⚠ Missing required CRDs:$MISSING_CRDS"
-          echo "Installing Gateway API CRDs..."
-          kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
-          echo "✓ Gateway API CRDs installed"
-        else
-          echo "✓ All required Gateway API CRDs present"
-        fi
+      - bash scripts/validate-gateway-crds.sh
 
   apply:helm-charts:
     desc: Stage 5 - Deploy application helm charts via Terraform (staged)
@@ -173,11 +167,11 @@ tasks:
       - terraform:check-vars
       - validate:gateway-crds
     cmds:
-      - task: apply:helm-charts:gateway
-      - task: apply:helm-charts:services
-      - task: apply:helm-charts:verify
+      - task: apply:gateway
+      - task: apply:services
+      - task: apply:verify
 
-  apply:helm-charts:gateway:
+  apply:gateway:
     desc: Deploy API Gateway with TLS certificate
     dir: terraform
     deps:
@@ -187,11 +181,13 @@ tasks:
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
       - terraform apply -target=module.consul_gateway.helm_release.consul_gateway -auto-approve
-      - echo "Waiting for TLS certificate to be ready..."
-      - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout=300s
-      - echo "✓ Gateway and TLS certificate deployed"
+      - echo "Waiting for TLS certificate to be issued (timeout {{.CERTIFICATE_TIMEOUT}}s)..."
+      - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout={{.CERTIFICATE_TIMEOUT}}s
+      - bash scripts/wait-for-tls-secret.sh {{.CONSUL_NAMESPACE}} api-gateway-tls
+      - bash scripts/wait-for-gateway-ready.sh {{.CONSUL_NAMESPACE}} api-gateway {{.GATEWAY_TIMEOUT}}
+      - echo "✓ Gateway and TLS certificate deployed and ready"
 
-  apply:helm-charts:services:
+  apply:services:
     desc: Deploy services with HTTPRoutes
     dir: terraform
     deps:
@@ -202,11 +198,12 @@ tasks:
       - echo "Deploying services and HTTPRoutes..."
       - terraform apply -target=module.consul_services.helm_release.consul_services -auto-approve
       - echo "Waiting for service pods to be ready..."
-      - kubectl wait --for=condition=ready pod -l app=api -n {{.DEMO_NAMESPACE}} --timeout=120s || true
-      - kubectl wait --for=condition=ready pod -l app=web -n {{.DEMO_NAMESPACE}} --timeout=120s || true
+      - kubectl wait --for=condition=ready pod -l app=api -n {{.DEMO_NAMESPACE}} --timeout=120s || echo "⚠ API pod not ready"
+      - kubectl wait --for=condition=ready pod -l app=web -n {{.DEMO_NAMESPACE}} --timeout=120s || echo "⚠ Web pod not ready"
+      - bash scripts/wait-for-loadbalancer-ip.sh {{.CONSUL_NAMESPACE}} component=api-gateway {{.LOADBALANCER_TIMEOUT}}
       - echo "✓ Services and routes deployed"
 
-  apply:helm-charts:verify:
+  apply:verify:
     desc: Verify complete deployment and connectivity
     dir: terraform
     deps:
@@ -215,10 +212,25 @@ tasks:
     cmds:
       - echo "Finalizing deployment..."
       - terraform apply -auto-approve
+
+      # Final reconciliation buffer
+      - echo "Allowing {{.RECONCILIATION_BUFFER}}s for final controller reconciliation..."
+      - sleep {{.RECONCILIATION_BUFFER}}
+
+      # Show Gateway status before verification
+      - echo "Gateway readiness status:"
+      - >
+        kubectl get gateway api-gateway -n {{.CONSUL_NAMESPACE}} -o jsonpath='{.status.conditions}' | jq '.'
+        || kubectl get gateway api-gateway -n {{.CONSUL_NAMESPACE}} -o yaml | grep -A 20 "conditions:"
+
+      # Show HTTPRoutes
       - echo "Verifying HTTPRoutes..."
       - kubectl get httproute -n {{.DEMO_NAMESPACE}} -o wide
+
+      # Run comprehensive TLS verification
       - echo "Running comprehensive TLS verification..."
       - task: verify:gateway-tls
+
       - echo "✓ Deployment complete and verified"
 
   destroy:

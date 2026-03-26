@@ -90,7 +90,19 @@ The `task apply` command performs a **staged deployment** with automatic validat
 
 Each stage includes confirmation prompts. Use `task apply -- --yes` to skip prompts for CI/CD.
 
-**Note:** The API Gateway deployment includes an automatic wait for LoadBalancer IP assignment (up to 120 seconds). This ensures the `apigw_lb_address` output is always populated on successful deployment, eliminating race conditions.
+**Deployment Wait Conditions:**
+
+The deployment includes intelligent wait conditions to ensure full resource reconciliation:
+
+| Stage | Wait Condition | Timeout | Purpose |
+|-------|---------------|---------|---------|
+| cert-manager | Deployments available + ACME init | 120s + 30s | Ensures ACME client ready for certificate issuance |
+| Gateway | Certificate ready + Secret data | 300s | Verifies TLS certificate issued and secret populated |
+| Gateway | Listener programmed + Refs resolved | 600s | Ensures Gateway controller reconciled configuration |
+| Services | LoadBalancer IP + DNS propagation | 300s + 30s | Waits for external IP assignment and DNS updates |
+| Verification | Final reconciliation buffer | 60s | Allows all controllers to observe and react to changes |
+
+These wait conditions eliminate race conditions and ensure `task apply --yes` completes successfully without manual intervention.
 
 ### 3. Verify Deployment
 
