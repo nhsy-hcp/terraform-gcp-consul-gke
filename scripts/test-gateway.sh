@@ -32,15 +32,35 @@ echo "Backend:  $BACKEND_FQDN"
 echo ""
 
 echo "Testing HTTPS frontend:"
-echo "Command: curl -k -v --resolve \"$FRONTEND_FQDN:443:$GATEWAY_IP\" \"https://$FRONTEND_FQDN/\""
-FRONTEND_RESPONSE=$(curl -k -v --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/" 2>&1)
+echo "Command: curl -k -s -v --resolve \"$FRONTEND_FQDN:443:$GATEWAY_IP\" \"https://$FRONTEND_FQDN/\""
+FRONTEND_RESPONSE=$(curl -k -s -v --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/" 2>&1)
 echo "$FRONTEND_RESPONSE"
 echo ""
 
+# Extract and validate frontend HTTP status code
+FRONTEND_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$FRONTEND_FQDN:443:$GATEWAY_IP" "https://$FRONTEND_FQDN/")
+if [[ "$FRONTEND_STATUS" -ge 200 && "$FRONTEND_STATUS" -lt 300 ]]; then
+  echo "✅ Frontend test passed (HTTP $FRONTEND_STATUS)"
+else
+  echo "❌ Frontend test failed (HTTP $FRONTEND_STATUS)"
+  exit 1
+fi
+echo ""
+
 echo "Testing HTTPS backend:"
-echo "Command: curl -k -v --resolve \"$BACKEND_FQDN:443:$GATEWAY_IP\" \"https://$BACKEND_FQDN/\""
-BACKEND_RESPONSE=$(curl -k -v --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/" 2>&1)
+echo "Command: curl -k -s -v --resolve \"$BACKEND_FQDN:443:$GATEWAY_IP\" \"https://$BACKEND_FQDN/\""
+BACKEND_RESPONSE=$(curl -k -s -v --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/" 2>&1)
 echo "$BACKEND_RESPONSE"
 echo ""
 
-echo "✅ Gateway tests completed successfully!"
+# Extract and validate backend HTTP status code
+BACKEND_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" --resolve "$BACKEND_FQDN:443:$GATEWAY_IP" "https://$BACKEND_FQDN/")
+if [[ "$BACKEND_STATUS" -ge 200 && "$BACKEND_STATUS" -lt 300 ]]; then
+  echo "✅ Backend test passed (HTTP $BACKEND_STATUS)"
+else
+  echo "❌ Backend test failed (HTTP $BACKEND_STATUS)"
+  exit 1
+fi
+echo ""
+
+echo "✅ All gateway tests completed successfully!"
