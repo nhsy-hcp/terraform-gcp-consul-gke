@@ -90,6 +90,27 @@ resource "null_resource" "wait_for_tls_secret" {
   }
 }
 
+# Wait for Certificate resource to be Ready
+resource "null_resource" "wait_for_certificate" {
+  count = var.deploy_gateway ? 1 : 0
+
+  provisioner "local-exec" {
+    command     = "bash ${path.root}/../scripts/wait-for-certificate.sh ${var.gateway_namespace} api-gateway-cert ${var.certificate_timeout}"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [
+    helm_release.consul_gateway,
+    null_resource.wait_for_lb_ip,
+    null_resource.wait_for_tls_secret
+  ]
+
+  triggers = {
+    # Re-run if gateway is recreated
+    gateway_release = var.deploy_gateway ? helm_release.consul_gateway[0].id : ""
+  }
+}
+
 # Wait for Gateway to be programmed and listener to be accepted
 resource "null_resource" "wait_for_gateway_ready" {
   count = var.deploy_gateway ? 1 : 0
@@ -102,7 +123,8 @@ resource "null_resource" "wait_for_gateway_ready" {
   depends_on = [
     helm_release.consul_gateway,
     null_resource.wait_for_lb_ip,
-    null_resource.wait_for_tls_secret
+    null_resource.wait_for_tls_secret,
+    null_resource.wait_for_certificate
   ]
 
   triggers = {
@@ -122,6 +144,7 @@ data "kubernetes_service_v1" "api_gateway" {
     helm_release.consul_gateway,
     null_resource.wait_for_lb_ip,
     null_resource.wait_for_tls_secret,
+    null_resource.wait_for_certificate,
     null_resource.wait_for_gateway_ready
   ]
 }

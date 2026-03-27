@@ -52,3 +52,9 @@ variable "allowed_cidrs" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "certificate_timeout" {
+  description = "Timeout in seconds for waiting for TLS certificate to be ready"
+  type        = number
+  default     = 300
+}
