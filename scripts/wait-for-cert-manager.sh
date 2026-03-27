@@ -54,11 +54,38 @@ kubectl wait --for=condition=available deployment/cert-manager-webhook -n "$NAME
 kubectl wait --for=condition=available deployment/cert-manager-cainjector -n "$NAMESPACE" --timeout=${TIMEOUT}s
 
 echo ""
+echo "Verifying cert-manager CRDs..."
+for crd in certificates.cert-manager.io \
+           clusterissuers.cert-manager.io \
+           issuers.cert-manager.io \
+           certificaterequests.cert-manager.io \
+           orders.acme.cert-manager.io \
+           challenges.acme.cert-manager.io; do
+  echo "Checking CRD $crd..."
+  ELAPSED=0
+  while [ $ELAPSED -lt 60 ]; do
+    if kubectl get crd "$crd" &>/dev/null; then
+      echo "✓ CRD $crd is present"
+      break
+    fi
+    echo "⏳ Waiting for CRD $crd to be registered... (${ELAPSED}s/60s)"
+    sleep 5
+    ELAPSED=$((ELAPSED + 5))
+  done
+
+  if [ $ELAPSED -ge 60 ]; then
+    echo "ERROR: CRD $crd not registered"
+    exit 1
+  fi
+done
+
+echo ""
 echo "Waiting for cert-manager to initialize ACME client..."
 sleep 30
 
 echo ""
 echo "✓ cert-manager is ready"
 echo "✓ All deployments are available"
+echo "✓ All CRDs are registered"
 echo ""
 echo "cert-manager is ready for certificate issuance"

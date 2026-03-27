@@ -175,8 +175,7 @@ tasks:
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
       - terraform apply -target=module.consul_gateway -auto-approve
-      - echo "Waiting for TLS certificate to be issued (timeout {{.CERTIFICATE_TIMEOUT}}s)..."
-      - kubectl wait --for=condition=ready certificate/api-gateway-cert -n {{.CONSUL_NAMESPACE}} --timeout={{.CERTIFICATE_TIMEOUT}}s
+      - bash {{.PROJECT_ROOT}}/scripts/wait-for-certificate.sh {{.CONSUL_NAMESPACE}} api-gateway-cert {{.CERTIFICATE_TIMEOUT}}
       - echo "✓ Gateway and TLS certificate deployed and ready"
 
   apply:services:
