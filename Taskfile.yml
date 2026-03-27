@@ -175,7 +175,6 @@ tasks:
     cmds:
       - echo "Deploying API Gateway and TLS certificate..."
       - terraform apply -target=module.consul_gateway -auto-approve
-      - bash {{.PROJECT_ROOT}}/scripts/wait-for-certificate.sh {{.CONSUL_NAMESPACE}} api-gateway-cert {{.CERTIFICATE_TIMEOUT}}
       - echo "✓ Gateway and TLS certificate deployed and ready"
 
   apply:services:
@@ -188,10 +187,6 @@ tasks:
     cmds:
       - echo "Deploying services and HTTPRoutes..."
       - terraform apply -target=module.consul_services.helm_release.consul_services -auto-approve
-      - echo "Waiting for service pods to be ready..."
-      - kubectl wait --for=condition=ready pod -l app=api -n {{.DEMO_NAMESPACE}} --timeout=120s || echo "⚠ API pod not ready"
-      - kubectl wait --for=condition=ready pod -l app=web -n {{.DEMO_NAMESPACE}} --timeout=120s || echo "⚠ Web pod not ready"
-      - bash {{.PROJECT_ROOT}}/scripts/wait-for-loadbalancer-ip.sh {{.CONSUL_NAMESPACE}} component=api-gateway {{.LOADBALANCER_TIMEOUT}}
       - echo "✓ Services and routes deployed"
 
   apply:verify:
@@ -200,6 +195,13 @@ tasks:
     deps:
       - terraform:check-vars
     silent: true
+    vars:
+      CONSUL_NS:
+        sh: terraform output -raw consul_namespace 2>/dev/null || echo "consul"
+      CERT_MANAGER_NS:
+        sh: terraform output -raw cert_manager_namespace 2>/dev/null || echo "cert-manager"
+      DEMO_NS:
+        sh: terraform output -raw demo_namespace 2>/dev/null || echo "demo"
     cmds:
       - echo "Finalizing deployment..."
       - terraform apply -auto-approve
@@ -211,16 +213,16 @@ tasks:
       # Show Gateway status before verification
       - echo "Gateway readiness status:"
       - >
-        kubectl get gateway api-gateway -n {{.CONSUL_NAMESPACE}} -o jsonpath='{.status.conditions}' | jq '.'
-        || kubectl get gateway api-gateway -n {{.CONSUL_NAMESPACE}} -o yaml | grep -A 20 "conditions:"
+        kubectl get gateway api-gateway -n {{.CONSUL_NS}} -o jsonpath='{.status.conditions}' | jq '.'
+        || kubectl get gateway api-gateway -n {{.CONSUL_NS}} -o yaml | grep -A 20 "conditions:"
 
       # Show HTTPRoutes
       - echo "Verifying HTTPRoutes..."
-      - kubectl get httproute -n {{.DEMO_NAMESPACE}} -o wide
+      - kubectl get httproute -n {{.DEMO_NS}} -o wide
 
       # Run comprehensive TLS verification
       - echo "Running comprehensive TLS verification..."
-      - task: verify:gateway-tls
+      - bash {{.PROJECT_ROOT}}/scripts/verify-gateway-tls.sh {{.CONSUL_NS}} {{.CERT_MANAGER_NS}}
 
       - echo "✓ Deployment complete and verified"
 
