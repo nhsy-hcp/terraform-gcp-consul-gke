@@ -107,6 +107,34 @@ Features include automated TLS via cert-manager and Google Cloud DNS.
 
 This project integrates with a Neo4j database containing Terraform provider schemas for validation and discovery.
 
+### Important Schema Notes
+
+**Provider Identification:**
+- Providers are identified by the `prefix` field (e.g., 'google', 'aws', 'helm'), NOT the `name` field
+- The `name` field contains the full registry path (e.g., 'registry.terraform.io/hashicorp/google')
+- Always use `prefix` when querying for providers: `MATCH (p:TF_Provider {prefix: 'google'})`
+
+**Resource Naming:**
+- Resource `name` field does NOT include the provider prefix (e.g., 'compute_network', 'container_cluster')
+- Resource `full_name` field INCLUDES the provider prefix (e.g., 'google_compute_network', 'google_container_cluster')
+- When matching resources by name, use the `name` field without prefix OR use `full_name` with prefix
+
+**Query Pattern Examples:**
+```cypher
+# Correct: Find provider by prefix
+MATCH (p:TF_Provider {prefix: 'google'})
+
+# Correct: Find resources using prefix
+MATCH (p:TF_Provider {prefix: 'google'})-[:TF_HAS_RESOURCE]->(r:TF_Resource)
+
+# Correct: Find specific resource by full_name
+MATCH (r:TF_Resource {full_name: 'google_compute_network'})
+
+# Correct: Find resources by name (without prefix)
+MATCH (r:TF_Resource)
+WHERE r.name IN ['compute_network', 'container_cluster']
+```
+
 ### Common Neo4j Queries
 
 **Find all resources for a specific provider:**
