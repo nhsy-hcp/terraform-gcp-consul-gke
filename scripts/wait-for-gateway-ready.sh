@@ -16,6 +16,27 @@ echo "Gateway: $GATEWAY_NAME"
 echo "Timeout: ${TIMEOUT}s"
 echo ""
 
+# Step 1: Check Gateway resource exists
+echo "Checking if Gateway resource exists..."
+WAIT_EXIST=0
+while [ $WAIT_EXIST -lt 60 ]; do
+  if kubectl get gateway "$GATEWAY_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+    echo "✓ Gateway resource exists"
+    break
+  fi
+  echo "⏳ Waiting for Gateway resource to be created... (${WAIT_EXIST}s/60s)"
+  sleep 5
+  WAIT_EXIST=$((WAIT_EXIST + 5))
+done
+
+if [ $WAIT_EXIST -ge 60 ]; then
+  echo "ERROR: Gateway resource not created after 60s"
+  exit 1
+fi
+
+# Step 2: Wait for Gateway to be programmed
+echo ""
+echo "Waiting for Gateway to be programmed..."
 ELAPSED=0
 INTERVAL=10
 

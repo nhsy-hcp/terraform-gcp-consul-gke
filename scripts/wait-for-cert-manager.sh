@@ -23,9 +23,11 @@ for deployment in cert-manager cert-manager-webhook cert-manager-cainjector; do
       echo "✓ Deployment $deployment exists"
       break
     fi
-    echo "⏳ Waiting for deployment $deployment to be created... (${ELAPSED}s/60s)"
-    sleep 5
-    ELAPSED=$((ELAPSED + 5))
+    if [ $((ELAPSED % 10)) -eq 0 ]; then
+      echo "⏳ Waiting for deployment $deployment to be created... (${ELAPSED}s/60s)"
+    fi
+    sleep 10
+    ELAPSED=$((ELAPSED + 10))
   done
 
   if [ $ELAPSED -ge 60 ]; then
@@ -68,13 +70,25 @@ for crd in certificates.cert-manager.io \
       echo "✓ CRD $crd is present"
       break
     fi
-    echo "⏳ Waiting for CRD $crd to be registered... (${ELAPSED}s/60s)"
-    sleep 5
-    ELAPSED=$((ELAPSED + 5))
+    if [ $((ELAPSED % 10)) -eq 0 ]; then
+      echo "⏳ Waiting for CRD $crd to be registered... (${ELAPSED}s/60s)"
+    fi
+    sleep 10
+    ELAPSED=$((ELAPSED + 10))
   done
 
   if [ $ELAPSED -ge 60 ]; then
+    echo ""
+    echo "=========================================="
     echo "ERROR: CRD $crd not registered"
+    echo "=========================================="
+    echo "Namespace: $NAMESPACE"
+    echo "Elapsed: 60s"
+    echo ""
+    echo "Troubleshooting:"
+    echo "1. Check cert-manager pods: kubectl get pods -n $NAMESPACE"
+    echo "2. Check cert-manager logs: kubectl logs -n $NAMESPACE -l app=cert-manager"
+    echo "3. Check CRD installation: kubectl get crds | grep cert-manager"
     exit 1
   fi
 done

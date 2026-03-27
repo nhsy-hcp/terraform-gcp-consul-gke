@@ -7,7 +7,7 @@ set -euo pipefail
 NAMESPACE="${1:-consul}"
 TIMEOUT="${2:-300}"
 ELAPSED=0
-INTERVAL=5
+INTERVAL=10
 
 echo "=========================================="
 echo "Waiting for API Gateway LoadBalancer IP"
@@ -24,9 +24,11 @@ while [ $GATEWAY_WAIT -lt 60 ]; do
     echo "✓ Gateway resource exists"
     break
   fi
-  echo "⏳ Waiting for Gateway resource to be created... (${GATEWAY_WAIT}s/60s)"
-  sleep 5
-  GATEWAY_WAIT=$((GATEWAY_WAIT + 5))
+  if [ $((GATEWAY_WAIT % 10)) -eq 0 ]; then
+    echo "⏳ Waiting for Gateway resource to be created... (${GATEWAY_WAIT}s/60s)"
+  fi
+  sleep 10
+  GATEWAY_WAIT=$((GATEWAY_WAIT + 10))
 done
 
 if [ $GATEWAY_WAIT -ge 60 ]; then
@@ -46,12 +48,12 @@ while [ $ELAPSED -lt "$TIMEOUT" ]; do
     break
   fi
 
-  if [ $((ELAPSED % 15)) -eq 0 ]; then
+  if [ $((ELAPSED % 30)) -eq 0 ]; then
     echo "⏳ Waiting for service creation... (${ELAPSED}s/${TIMEOUT}s)"
   fi
 
-  sleep 5
-  ELAPSED=$((ELAPSED + 5))
+  sleep $INTERVAL
+  ELAPSED=$((ELAPSED + INTERVAL))
 done
 
 if [ -z "$GATEWAY_SVC" ]; then
@@ -88,8 +90,8 @@ while [ $ELAPSED -lt "$TIMEOUT" ]; do
     exit 0
   fi
 
-  # Show progress
-  if [ $((ELAPSED % 15)) -eq 0 ]; then
+  # Show progress every 30 seconds
+  if [ $((ELAPSED % 30)) -eq 0 ]; then
     echo "⏳ Waiting for IP assignment... (${ELAPSED}s/${TIMEOUT}s)"
   fi
 
