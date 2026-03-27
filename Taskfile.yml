@@ -10,9 +10,9 @@ vars:
   DEMO_NAMESPACE:
     sh: cd terraform && (terraform output -raw demo_namespace 2>/dev/null | grep . || echo "demo")
   # Timeout values for wait conditions (in seconds)
-  CERT_MANAGER_INIT_TIMEOUT: "120"
+  CERT_MANAGER_INIT_TIMEOUT: "300"
   CERTIFICATE_TIMEOUT: "300"
-  GATEWAY_TIMEOUT: "600"
+  GATEWAY_TIMEOUT: "300"
   LOADBALANCER_TIMEOUT: "300"
   RECONCILIATION_BUFFER: "60"
 
