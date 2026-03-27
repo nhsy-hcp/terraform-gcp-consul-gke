@@ -67,3 +67,9 @@ variable "gateway_release_name" {
   type        = string
   default     = ""
 }
+
+variable "pod_readiness_timeout" {
+  description = "Timeout in seconds for waiting for service pods to be ready"
+  type        = number
+  default     = 120
+}

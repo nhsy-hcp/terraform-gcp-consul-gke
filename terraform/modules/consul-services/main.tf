@@ -71,3 +71,37 @@ resource "helm_release" "consul_services" {
     var.gateway_release_name
   ]
 }
+
+# Wait for API service pods to be ready
+resource "null_resource" "wait_for_api_pods" {
+  count = var.deploy_services && var.api_enabled ? 1 : 0
+
+  provisioner "local-exec" {
+    command     = "kubectl wait --for=condition=ready pod -l app=api -n ${var.demo_namespace} --timeout=${var.pod_readiness_timeout}s || echo '⚠ API pod not ready'"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [helm_release.consul_services]
+
+  triggers = {
+    # Re-run if services release is recreated
+    services_release = var.deploy_services ? helm_release.consul_services[0].id : ""
+  }
+}
+
+# Wait for Web service pods to be ready
+resource "null_resource" "wait_for_web_pods" {
+  count = var.deploy_services && var.web_enabled ? 1 : 0
+
+  provisioner "local-exec" {
+    command     = "kubectl wait --for=condition=ready pod -l app=web -n ${var.demo_namespace} --timeout=${var.pod_readiness_timeout}s || echo '⚠ Web pod not ready'"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [helm_release.consul_services]
+
+  triggers = {
+    # Re-run if services release is recreated
+    services_release = var.deploy_services ? helm_release.consul_services[0].id : ""
+  }
+}
